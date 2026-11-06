@@ -1,0 +1,5307 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07050f">
+<meta name="description" content="An interactive Diwali celebration of light, made with love by SAM from CODISAM.">
+<title>Happy Diwali — From SAM @ CODISAM</title>
+
+<!--
+  ============================================================
+  HAPPY DIWALI — FROM SAM @ CODISAM
+  ============================================================
+
+  QUICK EDIT GUIDE
+  ----------------
+  1. IDENTITY + SETTINGS  →  search for "EDITABLE CONFIG" in the
+     script near the bottom of this file.
+  2. ALL VISIBLE WORDS  →  the HTML sections in <main>.
+     Sender and brand words also use data-config attributes,
+     so they update automatically from the CONFIG object.
+  3. COLOURS            →  the :root CSS variables below.
+  4. SPEED / DENSITY    →  CONFIG.animationSpeed,
+                           CONFIG.particleDensity,
+                           CONFIG.fireworksIntensity.
+  5. MUSIC              →  CONFIG.music (generated live with the
+     Web Audio API — no audio files, no copyright issues).
+
+  This file is intentionally NOT minified. Every major block is
+  commented so it can be understood and edited later.
+  ============================================================
+-->
+
+<script>
+  /* Runs before the page paints: marks that JavaScript is available.
+     Without JS, the intro is hidden and all content stays readable. */
+  document.documentElement.classList.remove('no-js');
+  document.documentElement.classList.add('js');
+</script>
+
+<style>
+/* ============================================================
+   1. DESIGN TOKENS — edit colours, fonts and easing here
+   ============================================================ */
+:root {
+  /* Core palette */
+  --ink: #05030b;
+  --night: #07050f;
+  --navy: #0a0820;
+  --navy-soft: #120a28;
+  --cream: #f6eedb;
+  --muted: #c7b9a5;
+  --gold: #f6c453;
+  --gold-bright: #ffe9a8;
+  --amber: #ff9d2e;
+  --saffron: #ff7a1a;
+  --red: #c92a2a;
+  --pink: #ff5d8f;
+  --purple: #8b5cf6;
+
+  /* Typography */
+  --font-display: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", Georgia, serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+
+  /* Shape + motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --speed-factor: 1;          /* JavaScript sets this from CONFIG.animationSpeed */
+  --lit-ratio: 0;             /* JavaScript raises this as diyas are lit */
+  --header-height: 72px;
+
+  /* Widths */
+  --content-width: 1120px;
+  --gutter: clamp(1.25rem, 6vw, 4rem);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   2. BASE / RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fixed atmosphere behind all content */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(139, 92, 246, 0.14), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 8% 38%, rgba(255, 122, 26, 0.09), transparent 65%),
+    radial-gradient(ellipse 50% 45% at 94% 72%, rgba(255, 93, 143, 0.06), transparent 65%),
+    linear-gradient(180deg, #05030b 0%, #090617 38%, #07040f 72%, #030208 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    radial-gradient(1px 1px at 20% 24%, rgba(246, 196, 83, 0.55), transparent),
+    radial-gradient(1px 1px at 72% 12%, rgba(255, 233, 168, 0.4), transparent),
+    radial-gradient(1px 1px at 43% 78%, rgba(246, 196, 83, 0.35), transparent),
+    radial-gradient(1px 1px at 88% 56%, rgba(255, 157, 46, 0.45), transparent);
+  background-size: 460px 460px, 620px 620px, 520px 520px, 700px 700px;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(246, 196, 83, 0.32);
+  color: #fffbea;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Skip link — visible only when tabbed to */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 300;
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  background: var(--gold-bright);
+  color: #241304;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transform: translateY(-180%);
+  transition: transform 0.3s var(--ease);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* SVG symbol library is visual-only */
+.svg-library {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ============================================================
+   3. SHARED LAYOUT + TYPOGRAPHY
+   ============================================================ */
+main {
+  position: relative;
+  z-index: 3;
+}
+
+.section {
+  position: relative;
+  padding: clamp(4.5rem, 10vw, 8.5rem) 0;
+  scroll-margin-top: calc(var(--header-height) + 12px);
+}
+
+.wrap {
+  position: relative;
+  width: min(var(--content-width), calc(100% - (var(--gutter) * 2)));
+  margin-inline: auto;
+}
+
+.section-heading {
+  max-width: 740px;
+}
+
+.section-heading.is-centered {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.15rem;
+  color: var(--gold);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before,
+.eyebrow::after {
+  content: "";
+  width: clamp(20px, 4vw, 48px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 196, 83, 0.85));
+}
+
+.eyebrow::after {
+  background: linear-gradient(90deg, rgba(246, 196, 83, 0.85), transparent);
+}
+
+.section-heading.is-centered .eyebrow::before,
+.section-heading.is-centered .eyebrow::after {
+  display: inline-block;
+}
+
+.section-title {
+  margin: 0 0 1.1rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 5.4vw, 4.15rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  color: var(--cream);
+  text-wrap: balance;
+}
+
+.section-title em {
+  font-style: italic;
+  color: var(--gold-bright);
+}
+
+.section-copy {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(0.95rem, 1.5vw, 1.06rem);
+  line-height: 1.8;
+  text-wrap: pretty;
+}
+
+.section-heading.is-centered .section-copy {
+  margin-inline: auto;
+}
+
+/* Thin ornamental divider */
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem auto;
+  width: min(320px, 70%);
+  color: var(--gold);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 196, 83, 0.55));
+}
+
+.divider::after {
+  background: linear-gradient(90deg, rgba(246, 196, 83, 0.55), transparent);
+}
+
+.divider svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  filter: drop-shadow(0 0 8px rgba(246, 196, 83, 0.7));
+}
+
+/* Buttons */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 50px;
+  padding: 0.95rem 1.75rem;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.19em;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease),
+    background-color 0.35s var(--ease), border-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -60% -20%;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.8s var(--ease);
+  pointer-events: none;
+}
+
+.btn:hover::after {
+  transform: translateX(120%);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.btn-spark {
+  display: inline-block;
+  font-size: 0.82em;
+  line-height: 1;
+  opacity: 0.82;
+  transform: translateY(-0.05em);
+  transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+
+.btn:hover .btn-spark {
+  opacity: 1;
+  transform: translateY(-0.05em) scale(1.25) rotate(18deg);
+}
+
+.btn--gold {
+  background: linear-gradient(120deg, #ffe9a8 0%, #f6c453 45%, #dfa12e 100%);
+  color: #271404;
+  box-shadow:
+    0 0 0 1px rgba(255, 233, 168, 0.35),
+    0 16px 42px -14px rgba(246, 196, 83, 0.7);
+}
+
+.btn--gold:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 233, 168, 0.55),
+    0 20px 52px -12px rgba(246, 196, 83, 0.82);
+}
+
+.btn--ghost {
+  border-color: rgba(246, 196, 83, 0.38);
+  background: rgba(246, 196, 83, 0.04);
+  color: var(--gold-bright);
+}
+
+.btn--ghost:hover {
+  border-color: rgba(246, 196, 83, 0.7);
+  background: rgba(246, 196, 83, 0.1);
+}
+
+.btn[aria-pressed="true"] {
+  background: rgba(246, 196, 83, 0.14);
+  border-color: rgba(246, 196, 83, 0.6);
+  color: var(--gold-bright);
+}
+
+/* Reveal-on-scroll: only hidden when JavaScript is running */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.9s var(--ease) var(--reveal-delay, 0ms),
+    transform 0.9s var(--ease) var(--reveal-delay, 0ms);
+}
+
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   4. FIXED CANVAS LAYERS + AMBIENT LIGHT
+   ============================================================ */
+#ambient-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#fireworks-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Warm wash that grows brighter with every diya lit */
+.festival-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: calc(var(--lit-ratio) * 0.9);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 72%, rgba(255, 157, 46, 0.22), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 20% 30%, rgba(255, 93, 143, 0.08), transparent 65%),
+    radial-gradient(ellipse 45% 40% at 82% 36%, rgba(139, 92, 246, 0.09), transparent 65%);
+  mix-blend-mode: screen;
+  transition: opacity 1.6s var(--ease-soft);
+}
+
+/* ============================================================
+   5. CINEMATIC INTRO
+   ============================================================ */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 55% 50% at 50% 58%, #1c1108 0%, #0b0615 42%, #020106 78%);
+  transition: opacity 1.15s var(--ease-soft), visibility 1.15s;
+}
+
+.intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 57%, rgba(255, 170, 60, 0.09), transparent 38%),
+    radial-gradient(circle at 50% 57%, rgba(255, 210, 120, 0.05), transparent 20%);
+  opacity: 0;
+  animation: introHalo 4.5s var(--ease-soft) 0.4s forwards;
+}
+
+.intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.intro:focus {
+  outline: none;
+}
+
+.intro.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#intro-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.intro-content {
+  position: relative;
+  z-index: 2;
+  width: min(780px, calc(100% - 2.5rem));
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.intro-diya {
+  position: relative;
+  width: clamp(96px, 16vw, 142px);
+  margin: 0 auto 1.5rem;
+  opacity: 0.3;
+  transform: scale(0.94);
+  filter: drop-shadow(0 0 0 rgba(255, 170, 60, 0));
+  transition:
+    opacity 1.8s var(--ease-soft),
+    transform 1.8s var(--ease),
+    filter 1.8s var(--ease-soft);
+}
+
+.intro-diya.is-lit {
+  opacity: 1;
+  transform: scale(1);
+  filter: drop-shadow(0 0 34px rgba(255, 170, 60, 0.55));
+}
+
+.intro-diya svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.intro-diya .intro-flame {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: opacity 1.4s var(--ease-soft);
+}
+
+.intro-diya.is-lit .intro-flame {
+  opacity: 1;
+  animation: flameFlicker calc(2.1s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.intro-diya .intro-halo {
+  opacity: 0;
+  transition: opacity 2s var(--ease-soft);
+}
+
+.intro-diya.is-lit .intro-halo {
+  opacity: 1;
+  animation: haloBreathe calc(5s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.intro-line {
+  margin: 0;
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(7px);
+  transition:
+    opacity 1.35s var(--ease-soft),
+    transform 1.35s var(--ease),
+    filter 1.35s var(--ease-soft);
+}
+
+.intro-line.is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.intro-line--one {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3.8vw, 2.6rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.015em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 34px rgba(246, 196, 83, 0.25);
+}
+
+.intro-line--two {
+  max-width: 30ch;
+  margin: 0.9rem auto 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.7vw, 1.65rem);
+  line-height: 1.5;
+  color: var(--cream);
+}
+
+.intro-enter {
+  margin-top: 2.2rem;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 1s var(--ease-soft), transform 1s var(--ease);
+}
+
+.intro-enter.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.intro-skip {
+  position: absolute;
+  top: clamp(1rem, 3vw, 1.75rem);
+  right: clamp(1rem, 3vw, 2rem);
+  z-index: 4;
+  padding: 0.55rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid rgba(246, 196, 83, 0.25);
+  background: none;
+  color: rgba(246, 238, 219, 0.66);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.intro-skip:hover {
+  color: var(--gold-bright);
+  border-color: var(--gold);
+}
+
+.intro-footnote {
+  position: absolute;
+  bottom: clamp(1rem, 3vw, 1.8rem);
+  left: 0;
+  right: 0;
+  z-index: 3;
+  margin: 0;
+  color: rgba(199, 185, 165, 0.42);
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   6. FIXED HEADER + AUDIO CONTROLS
+   ============================================================ */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--header-height);
+  padding: 0.85rem clamp(1rem, 4vw, 2.4rem);
+  background: linear-gradient(180deg, rgba(5, 3, 11, 0.72), rgba(5, 3, 11, 0));
+  transition: background 0.5s var(--ease-soft), border-color 0.5s, backdrop-filter 0.5s;
+  border-bottom: 1px solid transparent;
+}
+
+.site-header.is-scrolled {
+  background: rgba(5, 3, 11, 0.74);
+  border-bottom-color: rgba(246, 196, 83, 0.12);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+  color: var(--cream);
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  color: var(--gold);
+  filter: drop-shadow(0 0 10px rgba(246, 196, 83, 0.4));
+}
+
+.brand-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  line-height: 1;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  letter-spacing: 0.3em;
+  color: var(--gold-bright);
+}
+
+.brand-sub {
+  font-size: 0.52rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(199, 185, 165, 0.65);
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(246, 196, 83, 0.3);
+  border-radius: 999px;
+  background: rgba(17, 10, 27, 0.52);
+  color: var(--gold-bright);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.sound-toggle:hover {
+  border-color: rgba(246, 196, 83, 0.65);
+  background: rgba(246, 196, 83, 0.1);
+}
+
+/* Small animated equaliser inside the music button */
+.sound-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 13px;
+  height: 12px;
+}
+
+.sound-bars i {
+  display: block;
+  width: 2px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.55;
+  animation: equalise 1.1s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.sound-bars i:nth-child(1) { animation-delay: 0s; }
+.sound-bars i:nth-child(2) { height: 9px; animation-delay: 0.18s; }
+.sound-bars i:nth-child(3) { height: 6px; animation-delay: 0.32s; }
+.sound-bars i:nth-child(4) { animation-delay: 0.46s; }
+
+.sound-toggle[aria-pressed="true"] .sound-bars i {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(199, 185, 165, 0.65);
+}
+
+.volume svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.volume input[type="range"] {
+  width: 82px;
+  height: 20px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.volume input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(246, 196, 83, 0.3);
+}
+
+.volume input[type="range"]::-moz-range-track {
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(246, 196, 83, 0.3);
+}
+
+.volume input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(246, 196, 83, 0.7);
+}
+
+.volume input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px rgba(246, 196, 83, 0.7);
+}
+
+@media (max-width: 640px) {
+  .volume {
+    display: none;
+  }
+}
+
+/* ============================================================
+   7. HERO — THE GRAND GREETING
+   ============================================================ */
+.hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 100svh;
+  padding-top: calc(var(--header-height) + clamp(1rem, 4vh, 3rem));
+  padding-bottom: clamp(4rem, 10vh, 7rem);
+  text-align: center;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  width: min(980px, 120vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 157, 46, 0.13), transparent 55%);
+  transform: translate(-50%, -50%);
+  filter: blur(20px);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: min(760px, 92vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 196, 83, 0.3), transparent);
+  transform: translateX(-50%);
+}
+
+.hero-mandala {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(1080px, 138vw);
+  aspect-ratio: 1;
+  color: var(--gold);
+  opacity: 0.16;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  translate: calc(var(--parallax-x, 0) * 12px) calc(var(--parallax-y, 0) * 12px);
+  transition: translate 1.4s var(--ease-soft);
+}
+
+.hero-mandala svg {
+  width: 100%;
+  height: 100%;
+  animation: spinSlow 210s linear infinite;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 3;
+  width: min(980px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 1rem 0;
+}
+
+.hero-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: 0 0 1.2rem;
+  color: var(--gold);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.hero-kicker::before,
+.hero-kicker::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.75;
+}
+
+.hero-title:focus,
+.hero-title:focus-visible {
+  outline: none;
+}
+
+.hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.1rem, 11.4vw, 8.4rem);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: 0.045em;
+  color: var(--gold-bright);
+  background: linear-gradient(180deg, #fff8de 0%, #ffe9a8 24%, #f6c453 52%, #c98927 76%, #f6c453 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 10px 36px rgba(246, 196, 83, 0.28));
+  text-wrap: balance;
+}
+
+/* The title entrance is controlled when the intro finishes */
+.js .hero-title {
+  opacity: 0;
+  transform: translateY(34px) scale(0.985);
+  filter: blur(9px) drop-shadow(0 10px 36px rgba(246, 196, 83, 0.28));
+  transition:
+    opacity 1.5s var(--ease-soft) 0.15s,
+    transform 1.5s var(--ease) 0.15s,
+    filter 1.5s var(--ease-soft) 0.15s;
+}
+
+body.is-celebrating .hero-title {
+  opacity: 1;
+  transform: none;
+  filter: drop-shadow(0 10px 36px rgba(246, 196, 83, 0.28));
+}
+
+.hero-title .title-glow {
+  display: inline-block;
+  filter: drop-shadow(0 0 28px rgba(255, 210, 120, 0.22));
+}
+
+.hero-copy {
+  max-width: 55ch;
+  margin: 1.7rem auto 0;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2vw, 1.24rem);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.js .hero-copy,
+.js .hero-signature,
+.js .hero-actions,
+.js .hero-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 1.1s var(--ease-soft),
+    transform 1.1s var(--ease);
+}
+
+body.is-celebrating .hero-copy,
+body.is-celebrating .hero-signature,
+body.is-celebrating .hero-actions,
+body.is-celebrating .hero-scroll {
+  opacity: 1;
+  transform: none;
+}
+
+body.is-celebrating .hero-copy { transition-delay: 0.45s; }
+body.is-celebrating .hero-signature { transition-delay: 0.7s; }
+body.is-celebrating .hero-actions { transition-delay: 0.92s; }
+body.is-celebrating .hero-scroll { transition-delay: 1.2s; }
+
+.hero-signature {
+  margin-top: 1.9rem;
+}
+
+.hero-from {
+  margin: 0 0 0.35rem;
+  color: rgba(199, 185, 165, 0.78);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.hero-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 3.7vw, 2.35rem);
+  letter-spacing: 0.32em;
+  line-height: 1.2;
+  color: var(--gold-bright);
+  text-shadow: 0 0 30px rgba(246, 196, 83, 0.4);
+}
+
+.hero-name small {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  color: rgba(199, 185, 165, 0.7);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1.9rem;
+}
+
+.hero-scroll {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: clamp(2.2rem, 5vh, 3.5rem);
+  color: rgba(199, 185, 165, 0.55);
+  font-size: 0.58rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.hero-scroll-line {
+  position: relative;
+  width: 1px;
+  height: 48px;
+  overflow: hidden;
+  background: rgba(246, 196, 83, 0.14);
+}
+
+.hero-scroll-line::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: linear-gradient(180deg, transparent, var(--gold));
+  animation: scrollCue 2.6s var(--ease-soft) infinite;
+}
+
+/* Floating decorative diyas */
+.float-diya {
+  position: absolute;
+  z-index: 2;
+  width: clamp(46px, 6.5vw, 82px);
+  pointer-events: none;
+  opacity: 0.72;
+  filter: drop-shadow(0 0 18px rgba(255, 170, 60, 0.18));
+  animation: floatDiya calc(9s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.float-diya__flame {
+  position: absolute;
+  left: 50%;
+  bottom: 58%;
+  z-index: 2;
+  width: 24%;
+  height: 40%;
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 12px rgba(255, 170, 60, 0.65));
+  animation: flameFlicker calc(2.4s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.float-diya__flame svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.float-diya > svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.float-diya--one {
+  top: 22%;
+  left: 6%;
+  animation-delay: -2.2s;
+}
+
+.float-diya--two {
+  top: 31%;
+  right: 7%;
+  width: clamp(38px, 5vw, 62px);
+  animation-delay: -5.1s;
+  animation-duration: calc(11s * var(--speed-factor));
+}
+
+.float-diya--three {
+  bottom: 16%;
+  left: 14%;
+  width: clamp(34px, 4vw, 52px);
+  opacity: 0.45;
+  animation-delay: -7.4s;
+  animation-duration: calc(12s * var(--speed-factor));
+}
+
+/* ============================================================
+   8. INTERACTIVE MAIN DIYA
+   ============================================================ */
+.diya-section {
+  overflow: hidden;
+  text-align: center;
+}
+
+.diya-section::before {
+  content: "";
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  width: min(980px, 120vw);
+  height: min(760px, 90vw);
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(255, 157, 46, 0.13), transparent 62%);
+  transform: translate(-50%, -50%);
+  filter: blur(18px);
+}
+
+.diya-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.diya-button {
+  position: relative;
+  width: min(520px, 88vw);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.5s var(--ease);
+}
+
+.diya-button:hover {
+  transform: translateY(-4px);
+}
+
+.diya-button:active {
+  transform: scale(0.99);
+}
+
+.diya-button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  width: 58%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55), transparent 70%);
+  transform: translateX(-50%);
+  filter: blur(6px);
+  z-index: -1;
+}
+
+.diya-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 24px 34px rgba(0, 0, 0, 0.55));
+}
+
+.diya-svg .diya-halo {
+  opacity: 0.58;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.9s var(--ease-soft), transform 0.9s var(--ease);
+  animation: haloBreathe calc(5.5s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.diya-stage.is-lit .diya-svg .diya-halo {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.diya-svg .flame-wrap {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.8s var(--ease);
+}
+
+.diya-stage.is-lit .diya-svg .flame-wrap {
+  transform: scale(1.09);
+}
+
+.diya-svg .flame-outer {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flameFlicker calc(2.2s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.diya-svg .flame-inner {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flameFlicker calc(1.7s * var(--speed-factor)) ease-in-out infinite reverse;
+}
+
+.diya-svg .flame-core {
+  animation: corePulse calc(1.5s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.diya-svg .spark {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sparkRise calc(3.8s * var(--speed-factor)) ease-out infinite;
+}
+
+.diya-svg .spark--1 { animation-delay: 0s; }
+.diya-svg .spark--2 { animation-delay: 0.7s; }
+.diya-svg .spark--3 { animation-delay: 1.5s; }
+.diya-svg .spark--4 { animation-delay: 2.2s; }
+.diya-svg .spark--5 { animation-delay: 2.9s; }
+
+.diya-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0 0;
+  color: rgba(199, 185, 165, 0.66);
+  font-size: 0.64rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.diya-hint::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 14px rgba(246, 196, 83, 0.9);
+  animation: pulseDot 2.4s ease-in-out infinite;
+}
+
+.diya-message {
+  max-width: 34ch;
+  margin: 1.8rem auto 0;
+  opacity: 0;
+  transform: translateY(14px);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 1.65rem);
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--gold-bright);
+  text-shadow: 0 0 28px rgba(246, 196, 83, 0.22);
+  transition: opacity 1s var(--ease-soft) 0.15s, transform 1s var(--ease) 0.15s;
+}
+
+.diya-message.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Expanding ring of light on interaction */
+.light-wave {
+  position: fixed;
+  z-index: 130;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 -45px;
+  border: 1px solid rgba(255, 229, 158, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    0 0 34px rgba(255, 190, 90, 0.55),
+    inset 0 0 34px rgba(255, 210, 120, 0.35);
+  animation: waveOut 1.1s var(--ease-soft) forwards;
+}
+
+/* ============================================================
+   9. LIGHT UP THE DIWALI
+   ============================================================ */
+.light-up {
+  overflow: hidden;
+  text-align: center;
+}
+
+.light-up::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc(var(--lit-ratio) * 0.95);
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 58%, rgba(255, 157, 46, 0.16), transparent 65%),
+    radial-gradient(ellipse 35% 30% at 22% 40%, rgba(255, 93, 143, 0.07), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 78% 44%, rgba(139, 92, 246, 0.08), transparent 70%);
+  transition: opacity 1.2s var(--ease-soft);
+}
+
+.diya-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: clamp(0.25rem, 2vw, 1.3rem);
+  max-width: 960px;
+  margin: 3rem auto 2rem;
+}
+
+.mini-diya {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1.05;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  opacity: 0.48;
+  filter: grayscale(0.7) brightness(0.62);
+  transform: translateY(4px);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    opacity 0.8s var(--ease-soft),
+    filter 0.8s var(--ease-soft),
+    transform 0.45s var(--ease);
+}
+
+.mini-diya:hover {
+  transform: translateY(-5px);
+}
+
+.mini-diya:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+.mini-diya.is-lit {
+  opacity: 1;
+  filter: none;
+  transform: translateY(0);
+}
+
+.mini-diya.is-lit:hover {
+  transform: translateY(-5px);
+}
+
+.mini-diya svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.mini-diya .mini-flame {
+  position: absolute;
+  left: 50%;
+  bottom: 59%;
+  z-index: 2;
+  width: 24%;
+  height: 36%;
+  opacity: 0;
+  translate: -50% 0;
+  transform: scale(0.25);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 14px rgba(255, 170, 60, 0.8));
+  transition: opacity 0.7s var(--ease-soft), transform 0.7s var(--ease);
+}
+
+.mini-diya .mini-flame svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mini-diya.is-lit .mini-flame {
+  opacity: 1;
+  transform: scale(1);
+  animation: flameFlicker calc(2.4s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.light-progress {
+  margin: 0 0 0.8rem;
+  color: rgba(199, 185, 165, 0.7);
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.light-progress strong {
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+
+.light-complete {
+  max-width: 50ch;
+  margin: 0.8rem auto 0;
+  opacity: 0;
+  transform: translateY(12px);
+  font-family: var(--font-display);
+  font-size: clamp(1.06rem, 2.3vw, 1.35rem);
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--gold-bright);
+  transition: opacity 1s var(--ease-soft), transform 1s var(--ease);
+}
+
+.light-complete.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   10. MAKE A WISH
+   ============================================================ */
+.wish-section {
+  overflow: hidden;
+}
+
+.wish-section::before {
+  content: "";
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: min(900px, 120vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), rgba(255, 157, 46, 0.05) 40%, transparent 65%);
+  transform: translate(-50%, -50%);
+  filter: blur(14px);
+}
+
+.wish-sky {
+  position: relative;
+  margin-top: 2.5rem;
+  padding: clamp(2.2rem, 6vw, 4.5rem) clamp(1rem, 4vw, 3rem);
+  text-align: center;
+  isolation: isolate;
+}
+
+/* Soft star field made from tiny radial gradients */
+.wish-sky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.6;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 233, 168, 0.75), transparent),
+    radial-gradient(1px 1px at 27% 68%, rgba(246, 196, 83, 0.65), transparent),
+    radial-gradient(1.5px 1.5px at 48% 14%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 66% 74%, rgba(255, 157, 46, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 82% 32%, rgba(255, 233, 168, 0.55), transparent),
+    radial-gradient(1px 1px at 92% 62%, rgba(255, 93, 143, 0.5), transparent);
+  background-size: 340px 260px, 420px 360px, 300px 300px, 460px 380px, 380px 300px, 520px 420px;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+}
+
+.wish-sky::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 12%;
+  width: min(720px, 100%);
+  height: 76%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 48%, rgba(246, 196, 83, 0.09), transparent 62%);
+  transform: translateX(-50%);
+}
+
+.wish-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+  margin-inline: auto;
+}
+
+.wish-question {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.2vw, 2.05rem);
+  line-height: 1.35;
+  color: var(--cream);
+  text-wrap: balance;
+}
+
+.wish-question em {
+  color: var(--gold-bright);
+  font-style: italic;
+}
+
+.wish-open {
+  margin-top: 1.9rem;
+  min-width: min(280px, 100%);
+}
+
+.wish-confirmation {
+  max-width: 540px;
+  margin: 2.2rem auto 0;
+  padding-top: 1.8rem;
+  border-top: 1px solid rgba(246, 196, 83, 0.18);
+}
+
+.wish-confirmation-label {
+  margin: 0 0 0.6rem;
+  color: rgba(199, 185, 165, 0.65);
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.wish-confirmation-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.7vw, 1.6rem);
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--gold-bright);
+  text-wrap: balance;
+}
+
+.wish-confirmation-note {
+  margin: 0.8rem 0 0;
+  color: rgba(199, 185, 165, 0.68);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+}
+
+.wish-privacy-note {
+  margin: 1rem 0 0;
+  color: rgba(199, 185, 165, 0.42);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+}
+
+/* ============================================================
+   11. FIREWORKS CONTROL SECTION
+   ============================================================ */
+.fireworks-section {
+  overflow: hidden;
+  text-align: center;
+}
+
+.fireworks-section::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(1000px, 130vw);
+  height: min(620px, 80vw);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 35% 60%, rgba(255, 122, 26, 0.08), transparent 55%),
+    radial-gradient(ellipse at 65% 35%, rgba(139, 92, 246, 0.09), transparent 55%);
+  transform: translate(-50%, -50%);
+  filter: blur(12px);
+}
+
+.fireworks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.fireworks-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 1.5rem 0 0;
+  color: rgba(199, 185, 165, 0.58);
+  font-size: 0.63rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.fireworks-hint::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 14px rgba(246, 196, 83, 0.9);
+  animation: pulseDot 2.2s ease-in-out infinite;
+}
+
+/* ============================================================
+   12. THE GOLDEN GIFT
+   ============================================================ */
+.gift-section {
+  overflow: hidden;
+  text-align: center;
+}
+
+.gift-section::before {
+  content: "";
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: min(760px, 100vw);
+  height: min(600px, 80vw);
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(246, 196, 83, 0.1), transparent 62%);
+  transform: translate(-50%, -50%);
+  filter: blur(10px);
+}
+
+.gift-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 3rem;
+}
+
+.gift-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(210px, 32vw, 270px);
+  height: clamp(200px, 30vw, 250px);
+  padding: 0;
+  border: 0;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.gift-aura {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 196, 83, 0.2), transparent 60%);
+  filter: blur(6px);
+  animation: haloBreathe calc(5s * var(--speed-factor)) ease-in-out infinite;
+}
+
+.gift-box {
+  position: relative;
+  width: 180px;
+  height: 158px;
+  transition: transform 0.5s var(--ease);
+}
+
+.gift-button:hover .gift-box {
+  transform: translateY(-4px);
+}
+
+.gift-body {
+  position: absolute;
+  bottom: 0;
+  left: 8px;
+  width: 164px;
+  height: 108px;
+  overflow: hidden;
+  border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 70% 10%, rgba(255, 180, 90, 0.18), transparent 46%),
+    linear-gradient(160deg, #8e2334, #4c0f1e 58%, #26060f);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 214, 130, 0.24),
+    0 24px 44px rgba(0, 0, 0, 0.55);
+  transition: box-shadow 0.6s var(--ease-soft);
+}
+
+.gift-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 42%);
+}
+
+.gift-ribbon {
+  position: absolute;
+  background: linear-gradient(90deg, #b3812f, #ffe9b0 50%, #bb8b34);
+  box-shadow: 0 0 18px rgba(246, 196, 83, 0.18);
+}
+
+.gift-ribbon--v {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 24px;
+  transform: translateX(-50%);
+}
+
+.gift-ribbon--h {
+  top: 18px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(180deg, #b8872f, #ffe9b0 50%, #b8872f);
+}
+
+.gift-lid {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  z-index: 3;
+  width: 180px;
+  height: 38px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #ffe7a9, #d9a744 45%, #a97625);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(255, 246, 210, 0.35);
+  transition: transform 0.95s var(--ease), opacity 0.8s var(--ease-soft);
+}
+
+.gift-lid::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 24px;
+  background: linear-gradient(90deg, #b3812f, #ffe9b0 50%, #bb8b34);
+  transform: translateX(-50%);
+}
+
+.gift-bow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 4;
+  width: 94px;
+  height: 40px;
+  transform: translateX(-50%);
+  transition: transform 0.95s var(--ease), opacity 0.8s var(--ease-soft);
+}
+
+.gift-bow::before,
+.gift-bow::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  width: 38px;
+  height: 21px;
+  border-radius: 60% 40% 55% 45%;
+  background: linear-gradient(135deg, #ffe9a8, #d4a03c);
+  border: 1px solid rgba(255, 240, 190, 0.4);
+  box-shadow: 0 0 18px rgba(246, 196, 83, 0.22);
+}
+
+.gift-bow::before {
+  left: 7px;
+  transform: rotate(-24deg);
+}
+
+.gift-bow::after {
+  right: 7px;
+  transform: rotate(24deg);
+}
+
+.gift-bow span {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 17px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #c99633);
+  box-shadow: 0 0 16px rgba(246, 196, 83, 0.35);
+  transform: translateX(-50%);
+}
+
+/* Two ribbon tails hanging from the bow */
+.gift-bow span::before,
+.gift-bow span::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 12px;
+  height: 24px;
+  border-radius: 2px 2px 70% 70%;
+  background: linear-gradient(180deg, #e8be63, #a97625);
+  box-shadow: 0 0 8px rgba(246, 196, 83, 0.18);
+  transform-origin: 50% 0;
+}
+
+.gift-bow span::before {
+  transform: translateX(-78%) rotate(-22deg);
+}
+
+.gift-bow span::after {
+  transform: translateX(-22%) rotate(22deg);
+}
+
+.gift-spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-bright);
+  box-shadow: 0 0 12px rgba(246, 196, 83, 0.9);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gift-spark--1 { top: 8%; left: 16%; animation: giftSparkle 3.2s ease-in-out 0.4s infinite; }
+.gift-spark--2 { top: 18%; right: 10%; animation: giftSparkle 3.8s ease-in-out 1.2s infinite; }
+.gift-spark--3 { bottom: 12%; left: 4%; animation: giftSparkle 4.1s ease-in-out 2s infinite; }
+.gift-spark--4 { bottom: 8%; right: 2%; animation: giftSparkle 3.5s ease-in-out 2.8s infinite; }
+
+.gift-light {
+  position: absolute;
+  inset: -40%;
+  z-index: 2;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 233, 168, 0.95), rgba(255, 157, 46, 0.35) 34%, transparent 66%);
+  opacity: 0;
+  transform: scale(0.15);
+  pointer-events: none;
+  transition: opacity 0.7s var(--ease-soft), transform 0.9s var(--ease);
+  mix-blend-mode: screen;
+}
+
+/* Gift interaction states */
+.gift-button.is-shaking .gift-box {
+  animation: giftShake 0.62s ease-in-out;
+}
+
+.gift-button.is-open .gift-light {
+  opacity: 0.85;
+  transform: scale(1);
+}
+
+.gift-button.is-open .gift-lid {
+  opacity: 0;
+  transform: translate(26px, -104px) rotate(24deg);
+}
+
+.gift-button.is-open .gift-bow {
+  opacity: 0;
+  transform: translate(-50%, -118px) rotate(-18deg);
+}
+
+.gift-button.is-open .gift-body {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 214, 130, 0.32),
+    0 24px 44px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(246, 196, 83, 0.22);
+}
+
+.gift-hint {
+  margin: 0.6rem 0 0;
+  color: rgba(199, 185, 165, 0.58);
+  font-size: 0.63rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  transition: opacity 0.5s var(--ease-soft);
+}
+
+.gift-button.is-open + .gift-hint {
+  opacity: 0;
+}
+
+.gift-reveal {
+  max-width: 620px;
+  margin: 1.8rem auto 0;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 1.1s var(--ease-soft) 0.3s, transform 1.1s var(--ease) 0.3s;
+}
+
+.gift-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.gift-reveal p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.08rem, 2.4vw, 1.42rem);
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--gold-bright);
+  text-wrap: balance;
+}
+
+.gift-reveal .gift-reveal-sign {
+  margin-top: 1rem;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-style: normal;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(199, 185, 165, 0.6);
+}
+
+/* ============================================================
+   13. SIX BLESSINGS
+   ============================================================ */
+.blessings-section {
+  overflow: hidden;
+}
+
+.blessings-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(2rem, 6vw, 5rem);
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.blessing {
+  position: relative;
+  margin: 0;
+  padding: 1.45rem 0 1.45rem 2.6rem;
+  border-bottom: 1px solid rgba(246, 196, 83, 0.12);
+  font-family: var(--font-display);
+  font-size: clamp(1.08rem, 2.2vw, 1.42rem);
+  line-height: 1.5;
+  color: var(--cream);
+  text-wrap: pretty;
+}
+
+.blessing::before {
+  content: "";
+  position: absolute;
+  top: 2.1rem;
+  left: 0.35rem;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--gold);
+  background: rgba(246, 196, 83, 0.16);
+  box-shadow: 0 0 14px rgba(246, 196, 83, 0.4);
+  transform: rotate(45deg);
+}
+
+.blessing::after {
+  content: "";
+  position: absolute;
+  top: 1.45rem;
+  bottom: 1.45rem;
+  left: 1.15rem;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(246, 196, 83, 0.28), transparent);
+}
+
+/* ============================================================
+   14. INTERACTIVE RANGOLI
+   ============================================================ */
+.rangoli-section {
+  overflow: hidden;
+}
+
+.rangoli-section::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4%;
+  width: min(620px, 80vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 93, 143, 0.07), rgba(139, 92, 246, 0.05) 42%, transparent 68%);
+  transform: translateY(-50%);
+  filter: blur(12px);
+}
+
+.rangoli-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.rangoli-copy {
+  min-width: 0;
+}
+
+.rangoli-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.rangoli-stage::before {
+  content: "";
+  position: absolute;
+  inset: 3%;
+  border: 1px dashed rgba(246, 196, 83, 0.16);
+  border-radius: 50%;
+  animation: spinSlow 90s linear infinite;
+  pointer-events: none;
+}
+
+.rangoli-stage::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border: 1px solid rgba(255, 93, 143, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.rangoli-canvas {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 620px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: crosshair;
+  touch-action: pan-y;
+  filter: drop-shadow(0 0 48px rgba(246, 196, 83, 0.12));
+}
+
+.rangoli-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: rgba(199, 185, 165, 0.55);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.rangoli-note li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rangoli-note li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--dot, var(--gold));
+  box-shadow: 0 0 9px color-mix(in srgb, var(--dot, var(--gold)) 65%, transparent);
+}
+
+.rangoli-spin {
+  margin-top: 1.7rem;
+}
+
+/* ============================================================
+   15. FINALE
+   ============================================================ */
+.finale {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  overflow: hidden;
+  text-align: center;
+}
+
+.finale::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(1200px, 150vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 157, 46, 0.12), transparent 45%),
+    radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 62%);
+  transform: translate(-50%, -50%);
+  filter: blur(12px);
+}
+
+.finale::after {
+  content: "";
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: min(880px, 90vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 196, 83, 0.22), transparent);
+  transform: translateX(-50%);
+}
+
+.finale-inner {
+  position: relative;
+  z-index: 2;
+  width: min(900px, calc(100% - 2rem));
+  padding: 2rem 0;
+}
+
+.finale-line {
+  max-width: 24ch;
+  margin: 0 auto 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.4vw, 2.2rem);
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--cream);
+  text-wrap: balance;
+}
+
+.finale-thanks {
+  margin: 0 auto;
+  color: rgba(199, 185, 165, 0.72);
+  font-size: clamp(0.8rem, 1.5vw, 0.94rem);
+  letter-spacing: 0.06em;
+}
+
+.finale-title {
+  margin: clamp(2.2rem, 5vw, 3.4rem) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 9vw, 7.2rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  color: var(--gold-bright);
+  filter: drop-shadow(0 10px 34px rgba(246, 196, 83, 0.24));
+}
+
+/* Keep the clipped gradient on the words alone so the SVG heart stays clean */
+.finale-word {
+  background: linear-gradient(180deg, #fff9e5 0%, #ffe9a8 28%, #f6c453 58%, #c98927 82%, #f6c453 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.finale-heart {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.47em;
+  margin-left: 0.1em;
+  vertical-align: 0.1em;
+  color: #ff6a7a;
+  filter: drop-shadow(0 0 18px rgba(255, 93, 108, 0.55));
+  animation: heartBeat calc(2.4s * var(--speed-factor)) ease-in-out infinite;
+  transform-origin: center;
+}
+
+.finale-sign {
+  margin: 1.3rem 0 0;
+  color: rgba(199, 185, 165, 0.72);
+  font-size: 0.66rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.finale-sign strong {
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+
+.finale-brand {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 1.55rem);
+  letter-spacing: 0.42em;
+  color: var(--gold);
+}
+
+.finale-actions {
+  margin-top: 2.3rem;
+}
+
+/* ============================================================
+   16. FOOTER
+   ============================================================ */
+.site-footer {
+  position: relative;
+  z-index: 3;
+  padding: 2.2rem var(--gutter) 2.6rem;
+  border-top: 1px solid rgba(246, 196, 83, 0.1);
+  text-align: center;
+}
+
+.footer-line {
+  margin: 0;
+  color: rgba(199, 185, 165, 0.4);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  line-height: 1.9;
+  text-transform: uppercase;
+}
+
+.footer-line span {
+  color: rgba(246, 196, 83, 0.65);
+}
+
+/* ============================================================
+   17. FLOATING WISH + TOAST + DIALOG
+   ============================================================ */
+#floating-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 115;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.floating-wish {
+  position: fixed;
+  left: 50%;
+  bottom: 14vh;
+  max-width: min(430px, 82vw);
+  margin: 0;
+  padding: 0.8rem 1.3rem;
+  border: 1px solid rgba(246, 196, 83, 0.32);
+  border-radius: 999px;
+  background: rgba(20, 12, 6, 0.62);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 36px rgba(246, 196, 83, 0.18);
+  color: var(--gold-bright);
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(246, 196, 83, 0.3);
+  animation: floatWish 8.5s var(--ease-soft) forwards;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  z-index: 150;
+  max-width: min(430px, calc(100vw - 2rem));
+  padding: 0.8rem 1.25rem;
+  border: 1px solid rgba(246, 196, 83, 0.28);
+  border-radius: 999px;
+  background: rgba(13, 8, 22, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4);
+  color: var(--gold-bright);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, 18px);
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease-soft), transform 0.4s var(--ease);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.wish-dialog {
+  width: min(540px, calc(100vw - 2rem));
+  padding: clamp(1.5rem, 4vw, 2.6rem);
+  border: 1px solid rgba(246, 196, 83, 0.28);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(246, 196, 83, 0.08), transparent 55%),
+    linear-gradient(160deg, rgba(26, 15, 40, 0.99), rgba(8, 5, 16, 0.99));
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.7),
+    0 0 80px rgba(246, 196, 83, 0.06);
+  color: var(--cream);
+}
+
+.wish-dialog[open] {
+  animation: dialogIn 0.45s var(--ease) both;
+}
+
+.wish-dialog::backdrop {
+  background: rgba(3, 2, 8, 0.76);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+}
+
+.wish-dialog .eyebrow {
+  margin-bottom: 0.8rem;
+}
+
+.wish-dialog h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.2rem);
+  font-weight: 400;
+  color: var(--gold-bright);
+}
+
+.dialog-copy {
+  margin: 0 0 1.3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.dialog-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(246, 196, 83, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(246, 238, 219, 0.75);
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.dialog-close:hover {
+  border-color: rgba(246, 196, 83, 0.55);
+  background: rgba(246, 196, 83, 0.1);
+  color: var(--gold-bright);
+}
+
+.wish-form {
+  position: relative;
+}
+
+#wish-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.95rem 1rem;
+  resize: vertical;
+  border: 1px solid rgba(246, 196, 83, 0.24);
+  border-radius: 14px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--cream);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+}
+
+#wish-input::placeholder {
+  color: rgba(199, 185, 165, 0.42);
+  font-style: italic;
+}
+
+#wish-input:focus {
+  border-color: rgba(246, 196, 83, 0.65);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.1);
+}
+
+.form-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 1.5rem;
+  margin-top: 0.4rem;
+}
+
+.form-error {
+  margin: 0;
+  color: #ff9a8a;
+  font-size: 0.72rem;
+}
+
+.form-count {
+  margin: 0 0 0 auto;
+  color: rgba(199, 185, 165, 0.4);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
+.wish-submit {
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.form-privacy {
+  margin: 0.9rem 0 0;
+  color: rgba(199, 185, 165, 0.4);
+  font-size: 0.62rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ============================================================
+   18. KEYFRAMES
+   ============================================================ */
+@keyframes introHalo {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes flameFlicker {
+  0%, 100% { transform: scaleY(1) scaleX(1) rotate(-0.6deg); }
+  22% { transform: scaleY(1.06) scaleX(0.96) rotate(1.1deg); }
+  47% { transform: scaleY(0.96) scaleX(1.04) rotate(-1deg); }
+  73% { transform: scaleY(1.05) scaleX(0.97) rotate(0.7deg); }
+}
+
+@keyframes corePulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+
+@keyframes haloBreathe {
+  0%, 100% { opacity: 0.62; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.05); }
+}
+
+@keyframes sparkRise {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  12% { opacity: 0.9; }
+  70% { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-76px) scale(0.15); }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scrollCue {
+  0% { top: -70%; }
+  60%, 100% { top: 110%; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes waveOut {
+  0% { transform: scale(0.15); opacity: 0.9; }
+  100% { transform: scale(26); opacity: 0; }
+}
+
+@keyframes floatWish {
+  0% { opacity: 0; transform: translate(-50%, 24px) scale(0.92); }
+  12% { opacity: 1; }
+  72% { opacity: 0.92; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), -76vh) scale(1.04); }
+}
+
+@keyframes giftShake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  15% { transform: translateX(-7px) rotate(-1.5deg); }
+  30% { transform: translateX(6px) rotate(1.2deg); }
+  45% { transform: translateX(-5px) rotate(-1deg); }
+  60% { transform: translateX(4px) rotate(0.8deg); }
+  75% { transform: translateX(-2px) rotate(-0.4deg); }
+}
+
+@keyframes giftSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  45% { opacity: 1; transform: scale(1); }
+  70% { opacity: 0; transform: scale(0.6); }
+}
+
+@keyframes equalise {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.18); }
+  22% { transform: scale(1); }
+  32% { transform: scale(1.12); }
+  46% { transform: scale(1); }
+}
+
+@keyframes dialogIn {
+  0% { opacity: 0; transform: translateY(18px) scale(0.97); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   19. RESPONSIVE REFINEMENTS
+   ============================================================ */
+@media (max-width: 980px) {
+  .rangoli-layout {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .rangoli-copy {
+    order: 1;
+    max-width: 620px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .rangoli-copy .section-heading {
+    margin-inline: auto;
+  }
+
+  .rangoli-copy .eyebrow {
+    justify-content: center;
+  }
+
+  .rangoli-copy .section-copy {
+    margin-inline: auto;
+  }
+
+  .rangoli-note {
+    justify-content: center;
+  }
+
+  .rangoli-stage {
+    order: 2;
+    width: min(620px, 100%);
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --header-height: 72px;
+  }
+
+  .hero-title {
+    max-width: 6em;
+    margin-inline: auto;
+  }
+
+  .float-diya--one {
+    top: 15%;
+    left: 2%;
+  }
+
+  .float-diya--two {
+    top: 20%;
+    right: 2%;
+  }
+
+  .float-diya--three {
+    display: none;
+  }
+
+  .hero-copy {
+    max-width: 34ch;
+  }
+
+  .diya-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(0.4rem, 1.8vw, 1rem);
+    row-gap: 1.4rem;
+    max-width: 520px;
+  }
+
+  .mini-diya {
+    width: calc(25% - 0.9rem);
+    max-width: 104px;
+  }
+
+  .blessings-list {
+    grid-template-columns: 1fr;
+  }
+
+  .blessing {
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+  }
+
+  .blessing::before {
+    top: 1.85rem;
+  }
+
+  .blessing::after {
+    top: 1.2rem;
+    bottom: 1.2rem;
+  }
+
+  .gift-box {
+    transform: scale(0.92);
+  }
+
+  .gift-button:hover .gift-box {
+    transform: scale(0.92) translateY(-4px);
+  }
+
+  .wish-sky {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .brand-sub {
+    display: none;
+  }
+
+  .sound-text {
+    font-size: 0.58rem;
+  }
+
+  .sound-toggle {
+    padding: 0.45rem 0.7rem;
+  }
+
+  .hero-kicker {
+    font-size: 0.56rem;
+    letter-spacing: 0.28em;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: min(300px, 100%);
+    margin-inline: auto;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .hero-name {
+    letter-spacing: 0.24em;
+  }
+
+  .diya-grid {
+    gap: 0.3rem;
+    row-gap: 1rem;
+  }
+
+  .mini-diya {
+    width: calc(25% - 0.45rem);
+  }
+
+  .fireworks-actions {
+    flex-direction: column;
+    width: min(300px, 100%);
+    margin-inline: auto;
+  }
+
+  .fireworks-actions .btn {
+    width: 100%;
+  }
+
+  .blessing {
+    font-size: 1.02rem;
+  }
+
+  .rangoli-note {
+    font-size: 0.54rem;
+    gap: 0.4rem 0.9rem;
+  }
+
+  .toast {
+    bottom: 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-title {
+    font-size: 2.7rem;
+  }
+
+  .section-title {
+    font-size: 1.95rem;
+  }
+
+  .floating-wish {
+    font-size: 0.86rem;
+  }
+
+  /* Keep the eyebrow clear of the larger touch-friendly close button */
+  .wish-form .eyebrow {
+    max-width: calc(100% - 3.5rem);
+  }
+}
+
+@media (max-width: 360px) {
+  /* At the narrowest sizes the flanking rules crowd the close button */
+  .wish-form .eyebrow::before,
+  .wish-form .eyebrow::after {
+    display: none;
+  }
+}
+
+/* Wide screens: keep compositions elegant, not stretched */
+@media (min-width: 1500px) {
+  :root {
+    --content-width: 1220px;
+  }
+
+  .hero-mandala {
+    width: min(1180px, 120vw);
+  }
+}
+
+/* ============================================================
+   20. REDUCED MOTION + NO-JS FALLBACKS
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .js [data-reveal],
+  .js .hero-title,
+  .js .hero-copy,
+  .js .hero-signature,
+  .js .hero-actions,
+  .js .hero-scroll {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .intro-line,
+  .intro-enter {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .diya-message,
+  .light-complete,
+  .gift-reveal {
+    transition: none;
+  }
+
+  .hero-mandala svg,
+  .rangoli-stage::before {
+    animation: none;
+  }
+}
+
+/* If JavaScript is unavailable, the intro would trap the page — hide it.
+   All content is still readable and every non-JS link still works. */
+.no-js .intro {
+  display: none;
+}
+
+.no-js .hero-title,
+.no-js .hero-copy,
+.no-js .hero-signature,
+.no-js .hero-actions,
+.no-js .hero-scroll {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+.no-js .diya-message,
+.no-js .light-complete,
+.no-js .gift-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+</style>
+</head>
+<body class="intro-open">
+
+<a class="skip-link" href="#main">Skip to the celebration</a>
+
+<!-- ============================================================
+     SHARED SVG SYMBOLS (mini diya bowl + spark ornament)
+     ============================================================ -->
+<svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="miniClay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c47343"/>
+      <stop offset="55%" stop-color="#93472a"/>
+      <stop offset="100%" stop-color="#4e2113"/>
+    </linearGradient>
+    <linearGradient id="miniRim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3a066"/>
+      <stop offset="100%" stop-color="#8f4426"/>
+    </linearGradient>
+    <linearGradient id="flameFill" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#e84a0c"/>
+      <stop offset="48%" stop-color="#ffab2e"/>
+      <stop offset="100%" stop-color="#fff3b8"/>
+    </linearGradient>
+    <symbol id="flame" viewBox="0 0 40 72">
+      <path d="M20 0c8 15 14 27 12.5 41C31.5 53 26.5 62 20 68c-6.5-6-11.5-15-12.5-27C6 27 12 15 20 0Z" fill="url(#flameFill)"/>
+      <ellipse cx="20" cy="51" rx="4.5" ry="9" fill="#fff9d9"/>
+    </symbol>
+    <symbol id="diya-bowl" viewBox="0 0 120 84">
+      <path d="M13 34c4 27 24 42 47 42s43-15 47-42c-18 9-76 9-94 0Z" fill="url(#miniClay)"/>
+      <ellipse cx="60" cy="34" rx="47" ry="11" fill="url(#miniRim)"/>
+      <ellipse cx="60" cy="33.5" rx="38" ry="7" fill="#1b0a05"/>
+      <path d="M32 39c2 20 14 31 28 31s26-11 28-31c-16 5-40 5-56 0Z" fill="#ffffff" opacity="0.05"/>
+      <ellipse cx="60" cy="32" rx="8" ry="3" fill="#0d0503" opacity="0.8"/>
+    </symbol>
+    <symbol id="spark" viewBox="0 0 24 24">
+      <path d="M12 0c1.05 6.9 5.1 10.95 12 12-6.9 1.05-10.95 5.1-12 12-1.05-6.9-5.1-10.95-12-12C6.9 10.95 10.95 6.9 12 0Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     CINEMATIC INTRO
+     ============================================================ -->
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="Introduction to the Diwali celebration">
+  <canvas id="intro-canvas" aria-hidden="true"></canvas>
+
+  <button class="intro-skip" id="skip-intro" type="button">Skip intro</button>
+
+  <div class="intro-content">
+    <!-- A small diya wakes up as the opening line appears -->
+    <div class="intro-diya" id="intro-diya" aria-hidden="true">
+      <svg viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="introGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffd27a" stop-opacity="0.75"/>
+            <stop offset="55%" stop-color="#ff9d2e" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#ff7a1a" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="introFlame" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#e0450f"/>
+            <stop offset="55%" stop-color="#ffab2e"/>
+            <stop offset="100%" stop-color="#fff5c4"/>
+          </linearGradient>
+        </defs>
+        <ellipse class="intro-halo" cx="80" cy="72" rx="72" ry="58" fill="url(#introGlow)"/>
+        <g class="intro-flame">
+          <path d="M80 22c12 20 19 32 16 44-2 10-9 15-16 16-7-1-14-6-16-16-3-12 4-24 16-44Z" fill="url(#introFlame)"/>
+          <ellipse cx="80" cy="67" rx="5" ry="9" fill="#fffbe6"/>
+        </g>
+        <path d="M22 84c4 24 26 40 58 40s54-16 58-40c-22 10-94 10-116 0Z" fill="url(#miniClay)"/>
+        <ellipse cx="80" cy="84" rx="58" ry="14" fill="url(#miniRim)"/>
+        <ellipse cx="80" cy="83.5" rx="47" ry="9" fill="#1b0a05"/>
+        <ellipse cx="80" cy="82" rx="11" ry="4" fill="#0d0503"/>
+      </svg>
+    </div>
+
+    <p class="intro-line intro-line--one" id="intro-line-1">A little light can make a big difference...</p>
+    <p class="intro-line intro-line--two" id="intro-line-2">This Diwali, let happiness shine brighter than ever.</p>
+    <button class="btn btn--gold intro-enter" id="enter-site" type="button">Enter the celebration <span class="btn-spark" aria-hidden="true">✦</span></button>
+  </div>
+
+  <p class="intro-footnote">Best experienced with sound · made by SAM</p>
+</div>
+
+<!-- Fixed background + effect canvases -->
+<canvas id="ambient-canvas" aria-hidden="true"></canvas>
+<div class="festival-glow" aria-hidden="true"></div>
+<canvas id="fireworks-canvas" aria-hidden="true"></canvas>
+
+<!-- ============================================================
+     FIXED HEADER
+     ============================================================ -->
+<header class="site-header" id="site-header">
+  <a class="brand" href="#hero" aria-label="Back to the Diwali greeting">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 34c4 27 24 42 47 42s43-15 47-42c-18 9-76 9-94 0Z" fill="url(#miniClay)"/>
+        <ellipse cx="60" cy="34" rx="47" ry="11" fill="url(#miniRim)"/>
+        <ellipse cx="60" cy="33.5" rx="38" ry="7" fill="#1b0a05"/>
+        <path d="M60 4c9 15 14 23 12 32-1 7-6 11-12 12-6-1-11-5-12-12-2-9 3-17 12-32Z" fill="#ffb43b"/>
+        <ellipse cx="60" cy="37" rx="4" ry="6" fill="#fff8d8"/>
+      </svg>
+    </span>
+    <span class="brand-text">
+      <span class="brand-name" data-config="sender">SAM</span>
+      <span class="brand-sub"><span data-config="brand">CODISAM</span> · DIWALI</span>
+    </span>
+  </a>
+
+  <div class="audio-controls">
+    <button class="sound-toggle" id="music-toggle" type="button" aria-pressed="false" aria-label="Background music is off. Turn music on.">
+      <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="sound-text" id="music-label">Music off</span>
+    </button>
+    <label class="volume" for="music-volume">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a3.5 3.5 0 0 0-2-3.15v6.3A3.5 3.5 0 0 0 16.5 12Zm-2-7.7v2.06a6 6 0 0 1 0 11.28v2.06a8 8 0 0 0 0-15.4Z"/></svg>
+      <span class="sr-only">Music volume</span>
+      <input type="range" id="music-volume" min="0" max="100" value="35" step="1">
+    </label>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================================================
+     HERO — THE MAIN GREETING
+     ============================================================ -->
+<section class="section hero" id="hero" aria-labelledby="hero-title">
+  <div class="hero-mandala" aria-hidden="true">
+    <!-- Decorative rangoli-inspired mandala, drawn with SVG -->
+    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="0.8">
+      <circle cx="200" cy="200" r="192" stroke-dasharray="1 11"/>
+      <circle cx="200" cy="200" r="158" opacity="0.7"/>
+      <circle cx="200" cy="200" r="126" stroke-dasharray="2 8" opacity="0.8"/>
+      <circle cx="200" cy="200" r="72"/>
+      <circle cx="200" cy="200" r="40" stroke-dasharray="1 6"/>
+      <g id="mandala-petal">
+        <path d="M200 62c22 30 30 58 18 78-5 9-12 14-18 18-6-4-13-9-18-18-12-20-4-48 18-78Z"/>
+      </g>
+      <use href="#mandala-petal" transform="rotate(30 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(60 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(90 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(120 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(150 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(180 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(210 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(240 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(270 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(300 200 200)"/>
+      <use href="#mandala-petal" transform="rotate(330 200 200)"/>
+      <g opacity="0.85">
+        <circle cx="200" cy="200" r="172" stroke-dasharray="4 16"/>
+        <circle cx="200" cy="200" r="104" stroke-dasharray="4 12"/>
+      </g>
+      <g stroke-width="1.4" opacity="0.55">
+        <circle cx="200" cy="28" r="2.5"/>
+        <circle cx="372" cy="200" r="2.5"/>
+        <circle cx="200" cy="372" r="2.5"/>
+        <circle cx="28" cy="200" r="2.5"/>
+        <circle cx="321" cy="79" r="2"/>
+        <circle cx="321" cy="321" r="2"/>
+        <circle cx="79" cy="321" r="2"/>
+        <circle cx="79" cy="79" r="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- A few floating diyas for depth -->
+  <span class="float-diya float-diya--one" aria-hidden="true">
+    <span class="float-diya__flame" aria-hidden="true">
+      <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+    </span>
+    <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg"><use href="#diya-bowl"/></svg>
+  </span>
+  <span class="float-diya float-diya--two" aria-hidden="true">
+    <span class="float-diya__flame" aria-hidden="true">
+      <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+    </span>
+    <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg"><use href="#diya-bowl"/></svg>
+  </span>
+  <span class="float-diya float-diya--three" aria-hidden="true">
+    <span class="float-diya__flame" aria-hidden="true">
+      <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+    </span>
+    <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg"><use href="#diya-bowl"/></svg>
+  </span>
+
+  <div class="hero-inner">
+    <p class="hero-kicker">A festival of light · <span data-config="brand">CODISAM</span></p>
+
+    <h1 class="hero-title" id="hero-title" tabindex="-1">
+      <span class="title-glow" data-config="greeting">HAPPY DIWALI</span>
+    </h1>
+
+    <p class="hero-copy">
+      May this festival of lights fill your life with endless happiness, success,
+      prosperity, peace, and beautiful new beginnings.
+    </p>
+
+    <!-- EDITABLE CONTENT: SIGNATURE -->
+    <div class="hero-signature">
+      <p class="hero-from">With love &amp; best wishes</p>
+      <p class="hero-name"><span data-config="sender">SAM</span><small>From <span data-config="brand">CODISAM</span></small></p>
+    </div>
+
+    <div class="hero-actions">
+      <a class="btn btn--gold" href="#diya">Light the diya</a>
+      <button class="btn btn--ghost" type="button" data-open-wish>Make a wish</button>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">
+      <span>Scroll into the light</span>
+      <span class="hero-scroll-line"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     INTERACTIVE MAIN DIYA
+     ============================================================ -->
+<section class="section diya-section" id="diya" aria-labelledby="diya-title">
+  <div class="wrap">
+    <div class="section-heading is-centered" data-reveal>
+      <p class="eyebrow">The first light</p>
+      <h2 class="section-title" id="diya-title">Touch the <em>flame</em>.</h2>
+      <p class="section-copy">
+        Every diya carries a quiet prayer. Tap this one and let its light travel
+        a little further than the screen.
+      </p>
+    </div>
+
+    <div class="diya-stage" id="diya-stage">
+      <!-- EDITABLE CONTENT: MAIN DIYA MESSAGE -->
+      <button class="diya-button" id="main-diya" type="button" aria-describedby="diya-message">
+        <span class="sr-only">Light the main diya</span>
+        <svg class="diya-svg" viewBox="0 0 420 360" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="mainGlow" cx="50%" cy="44%" r="50%">
+              <stop offset="0%" stop-color="#ffd27a" stop-opacity="0.9"/>
+              <stop offset="32%" stop-color="#ff9a2e" stop-opacity="0.36"/>
+              <stop offset="100%" stop-color="#ff7a1a" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="mainClay" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#b8653a"/>
+              <stop offset="45%" stop-color="#8a4226"/>
+              <stop offset="100%" stop-color="#4a1f12"/>
+            </linearGradient>
+            <linearGradient id="mainRim" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d98a52"/>
+              <stop offset="55%" stop-color="#a4572f"/>
+              <stop offset="100%" stop-color="#6b3019"/>
+            </linearGradient>
+            <radialGradient id="mainOil" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2b130a"/>
+              <stop offset="70%" stop-color="#160906"/>
+              <stop offset="100%" stop-color="#3a1a0d"/>
+            </radialGradient>
+            <linearGradient id="mainFlameOuter" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#e0450f"/>
+              <stop offset="45%" stop-color="#ff9a1e"/>
+              <stop offset="100%" stop-color="#fff1b0"/>
+            </linearGradient>
+            <linearGradient id="mainFlameInner" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#ffd35e"/>
+              <stop offset="100%" stop-color="#fffbe6"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Soft light around the flame -->
+          <ellipse class="diya-halo" cx="210" cy="190" rx="205" ry="178" fill="url(#mainGlow)"/>
+
+          <!-- Clay bowl + oil -->
+          <path d="M90 232C95 292 147 322 210 322s115-30 120-90c-38 20-202 20-240 0Z" fill="url(#mainClay)"/>
+          <ellipse cx="210" cy="232" rx="120" ry="27" fill="url(#mainRim)"/>
+          <ellipse cx="210" cy="231" rx="99" ry="18" fill="url(#mainOil)"/>
+
+          <!-- Warm highlight on the clay -->
+          <path d="M128 253c22 26 52 39 82 39" fill="none" stroke="#ffcf8a" stroke-width="2" stroke-linecap="round" opacity="0.16"/>
+          <ellipse cx="210" cy="226" rx="92" ry="12" fill="none" stroke="#ffd89a" stroke-opacity="0.2"/>
+
+          <!-- Gold dots along the rim -->
+          <g fill="#ffd27a" opacity="0.55">
+            <circle cx="140" cy="239" r="1.8"/>
+            <circle cx="168" cy="245" r="1.4"/>
+            <circle cx="196" cy="248" r="1.8"/>
+            <circle cx="224" cy="248" r="1.4"/>
+            <circle cx="252" cy="245" r="1.8"/>
+            <circle cx="280" cy="239" r="1.4"/>
+          </g>
+
+          <!-- Wick -->
+          <path d="M210 228l0-27" stroke="#2a1610" stroke-width="5" stroke-linecap="round"/>
+
+          <!-- Flame -->
+          <g class="flame-wrap">
+            <path class="flame-outer" d="M210 88c24 40 38 64 32 90-4 20-18 30-32 32-14-2-28-12-32-32-6-26 8-50 32-90Z" fill="url(#mainFlameOuter)"/>
+            <path class="flame-inner" d="M210 132c14 22 20 36 16 52-3 12-9 18-16 21-7-3-13-9-16-21-4-16 2-30 16-52Z" fill="url(#mainFlameInner)"/>
+            <ellipse class="flame-core" cx="210" cy="188" rx="8" ry="14" fill="#fffdf0"/>
+          </g>
+
+          <!-- Tiny sparks lifting from the flame -->
+          <g fill="#ffd98a">
+            <circle class="spark spark--1" cx="198" cy="142" r="2"/>
+            <circle class="spark spark--2" cx="222" cy="124" r="1.6"/>
+            <circle class="spark spark--3" cx="206" cy="108" r="1.4"/>
+            <circle class="spark spark--4" cx="230" cy="96" r="1.7"/>
+            <circle class="spark spark--5" cx="190" cy="86" r="1.2"/>
+          </g>
+        </svg>
+      </button>
+
+      <p class="diya-hint" id="diya-hint">Tap the diya</p>
+      <p class="diya-message" id="diya-message" aria-live="polite">
+        May your life always shine with happiness and positivity.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     LIGHT UP THE DIWALI
+     ============================================================ -->
+<section class="section light-up" id="light-up" aria-labelledby="light-up-title">
+  <div class="wrap">
+    <div class="section-heading is-centered" data-reveal>
+      <p class="eyebrow">One by one</p>
+      <h2 class="section-title" id="light-up-title">Light up the <em>night</em>.</h2>
+      <p class="section-copy">
+        Seven little flames. Seven wishes for you. Tap each diya and watch the
+        darkness take one respectful step back.
+      </p>
+    </div>
+
+    <div class="diya-grid" id="diya-grid" role="group" aria-label="Seven diyas to light">
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 1 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 2 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 3 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 4 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 5 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 6 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+      <button class="mini-diya" type="button" data-diya aria-pressed="false" aria-label="Light diya 7 of 7">
+        <span class="mini-flame" aria-hidden="true">
+          <svg viewBox="0 0 40 72" xmlns="http://www.w3.org/2000/svg"><use href="#flame"/></svg>
+        </span>
+        <svg viewBox="0 0 120 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#diya-bowl"/></svg>
+      </button>
+    </div>
+
+    <!-- EDITABLE CONTENT: LIGHT-UP PROGRESS + FINAL MESSAGE -->
+    <p class="light-progress" id="light-progress" aria-live="polite">
+      <strong>0</strong> of 7 diyas glowing
+    </p>
+    <p class="light-complete" id="light-complete">
+      The whole night is glowing now. May your home always feel this warm,
+      this bright, and this full of love.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     MAKE A WISH
+     ============================================================ -->
+<section class="section wish-section" id="wish" aria-labelledby="wish-title">
+  <div class="wrap">
+    <div class="section-heading is-centered" data-reveal>
+      <p class="eyebrow">Send it skyward</p>
+      <h2 class="section-title" id="wish-title">Make a <em>wish</em>.</h2>
+      <p class="section-copy">
+        Write down the thing your heart is quietly hoping for. Then release it
+        into the Diwali sky and let the light do the rest.
+      </p>
+    </div>
+
+    <div class="wish-sky" data-reveal>
+      <div class="wish-inner">
+        <p class="wish-question">
+          What is the one thing you want the light to carry
+          <em>for you this year?</em>
+        </p>
+
+        <button class="btn btn--gold wish-open" type="button" data-open-wish>
+          Make a wish <span class="btn-spark" aria-hidden="true">✦</span>
+        </button>
+
+        <!-- Revealed after a wish is released -->
+        <div class="wish-confirmation" id="wish-confirmation" hidden>
+          <p class="wish-confirmation-label">Your wish is part of the sky now</p>
+          <p class="wish-confirmation-text" id="wish-confirmation-text"></p>
+          <p class="wish-confirmation-note">May your wish find its way to reality.</p>
+        </div>
+
+        <p class="wish-privacy-note">Kept privately in this browser. Nothing is uploaded anywhere.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FIREWORKS CONTROLS
+     ============================================================ -->
+<section class="section fireworks-section" id="fireworks" aria-labelledby="fireworks-title">
+  <div class="wrap">
+    <div class="section-heading is-centered" data-reveal>
+      <p class="eyebrow">A sky full of joy</p>
+      <h2 class="section-title" id="fireworks-title">Paint the <em>night</em>.</h2>
+      <p class="section-copy">
+        Tap anywhere on the page — or let the sky perform on its own. Every burst
+        is a small celebration of you.
+      </p>
+    </div>
+
+    <div class="fireworks-actions" data-reveal>
+      <button class="btn btn--gold" id="launch-fireworks" type="button">Launch a firework</button>
+      <button class="btn btn--ghost" id="auto-fireworks" type="button" aria-pressed="false">
+        Start auto show
+      </button>
+    </div>
+
+    <p class="fireworks-hint" data-reveal>Tap the background to set off fireworks</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     THE GOLDEN GIFT
+     ============================================================ -->
+<section class="section gift-section" id="gift" aria-labelledby="gift-title">
+  <div class="wrap">
+    <div class="section-heading is-centered" data-reveal>
+      <p class="eyebrow">A little surprise</p>
+      <h2 class="section-title" id="gift-title">The golden <em>gift</em>.</h2>
+      <p class="section-copy">
+        Some gifts are wrapped in paper. This one is wrapped in light.
+        Go on — it has been waiting for you.
+      </p>
+    </div>
+
+    <div class="gift-stage" data-reveal>
+      <button class="gift-button" id="gift-button" type="button" aria-expanded="false" aria-controls="gift-reveal">
+        <span class="sr-only">Open the golden gift</span>
+        <span class="gift-aura" aria-hidden="true"></span>
+        <span class="gift-box" aria-hidden="true">
+          <span class="gift-light"></span>
+          <span class="gift-body">
+            <span class="gift-ribbon gift-ribbon--v"></span>
+            <span class="gift-ribbon gift-ribbon--h"></span>
+          </span>
+          <span class="gift-lid"></span>
+          <span class="gift-bow"><span></span></span>
+          <span class="gift-spark gift-spark--1"></span>
+          <span class="gift-spark gift-spark--2"></span>
+          <span class="gift-spark gift-spark--3"></span>
+          <span class="gift-spark gift-spark--4"></span>
+        </span>
+      </button>
+
+      <p class="gift-hint" id="gift-hint">Tap the gift</p>
+
+      <!-- EDITABLE CONTENT: GIFT MESSAGE -->
+      <div class="gift-reveal" id="gift-reveal">
+        <p>
+          You are the light. The love you share, the joy you spread, and the hope
+          you carry — that is the real gift. May this Diwali return all of it to
+          you a hundredfold.
+        </p>
+        <p class="gift-reveal-sign">With love, SAM · CODISAM</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SIX BLESSINGS
+     ============================================================ -->
+<section class="section blessings-section" id="blessings" aria-labelledby="blessings-title">
+  <div class="wrap">
+    <div class="section-heading" data-reveal>
+      <p class="eyebrow">Six blessings</p>
+      <h2 class="section-title" id="blessings-title">Carry these <em>with you</em>.</h2>
+      <p class="section-copy">
+        Not the kind of wishes you save for one night — the kind you keep
+        somewhere close for the whole year.
+      </p>
+    </div>
+
+    <!-- EDITABLE CONTENT: THE SIX BLESSINGS -->
+    <ul class="blessings-list" id="blessings-list">
+      <li class="blessing" data-reveal>May your home always shine with happiness.</li>
+      <li class="blessing" data-reveal style="--reveal-delay: 90ms">May your dreams become reality.</li>
+      <li class="blessing" data-reveal>May prosperity find its way to your doorstep.</li>
+      <li class="blessing" data-reveal style="--reveal-delay: 90ms">May your life be filled with love and laughter.</li>
+      <li class="blessing" data-reveal>May every new beginning bring new opportunities.</li>
+      <li class="blessing" data-reveal style="--reveal-delay: 90ms">May the light of Diwali remove every darkness from your life.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     INTERACTIVE RANGOLI
+     ============================================================ -->
+<section class="section rangoli-section" id="rangoli" aria-labelledby="rangoli-title">
+  <div class="wrap rangoli-layout">
+    <div class="rangoli-copy" data-reveal>
+      <p class="eyebrow">Art in symmetry</p>
+      <h2 class="section-title" id="rangoli-title">The rangoli <em>remembers</em>.</h2>
+      <p class="section-copy">
+        Every petal is placed with intention. Move your cursor across the
+        rangoli — or give it a spin — and watch the colours answer.
+      </p>
+      <ul class="rangoli-note">
+        <li style="--dot: var(--gold)">Gold</li>
+        <li style="--dot: var(--saffron)">Saffron</li>
+        <li style="--dot: var(--pink)">Rose</li>
+        <li style="--dot: var(--purple)">Violet</li>
+      </ul>
+      <button class="btn btn--ghost rangoli-spin" id="rangoli-spin" type="button">
+        Give it a spin
+      </button>
+    </div>
+
+    <div class="rangoli-stage" data-reveal>
+      <canvas class="rangoli-canvas" id="rangoli-canvas" width="640" height="640" role="img" aria-label="A glowing, symmetrical rangoli made of golden, saffron, rose and violet petals.">
+        A glowing, symmetrical rangoli made of golden, saffron, rose and violet petals.
+      </canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FINALE
+     ============================================================ -->
+<section class="section finale" id="finale" aria-labelledby="finale-title">
+  <div class="finale-inner">
+    <!-- EDITABLE CONTENT: CLOSING MESSAGE -->
+    <p class="finale-line" data-reveal>May the light of Diwali stay with you, today and forever.</p>
+    <p class="finale-thanks" data-reveal style="--reveal-delay: 100ms">
+      Thank you for being a part of this little celebration.
+    </p>
+
+    <h2 class="finale-title" id="finale-title" data-reveal>
+      <span class="finale-word">HAPPY DIWALI</span>
+      <svg class="finale-heart" viewBox="0 0 32 30" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="finaleHeartFill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffa1ad"/>
+            <stop offset="55%" stop-color="#ff6a7a"/>
+            <stop offset="100%" stop-color="#df3d5c"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 29C6.7 21.2 1 15.3 1 8.9 1 4.5 4.4 1 8.7 1c2.9 0 5.7 1.6 7.3 4.2C17.6 2.6 20.4 1 23.3 1 27.6 1 31 4.5 31 8.9c0 6.4-5.7 12.3-15 20.1Z" fill="url(#finaleHeartFill)" stroke="rgba(246, 196, 83, 0.5)" stroke-width="0.7"/>
+      </svg>
+    </h2>
+
+    <p class="finale-sign" data-reveal>
+      With love, <strong data-config="sender">SAM</strong>
+    </p>
+    <p class="finale-brand" data-reveal data-config="brand">CODISAM</p>
+
+    <div class="finale-actions" data-reveal>
+      <button class="btn btn--ghost" id="finale-fireworks" type="button">
+        One last celebration <span class="btn-spark" aria-hidden="true">✦</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="site-footer">
+  <p class="footer-line">
+    Made with light, for the people who make life brighter.<br>
+    <span data-config="sender">SAM</span> @ <span data-config="brand">CODISAM</span> · Happy Diwali
+  </p>
+</footer>
+
+<!-- Layer for wishes floating into the sky -->
+<div id="floating-layer" aria-hidden="true"></div>
+
+<!-- Announcements for screen readers and small confirmations -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================================================
+     WISH DIALOG
+     ============================================================ -->
+<dialog class="wish-dialog" id="wish-dialog" aria-labelledby="wish-dialog-title">
+  <form class="wish-form" id="wish-form" novalidate>
+    <button class="dialog-close" type="button" id="wish-close" aria-label="Close the wish dialog">×</button>
+    <p class="eyebrow">Send it skyward</p>
+    <h2 id="wish-dialog-title">Make a wish</h2>
+    <p class="dialog-copy">Write down the thing your heart is quietly hoping for. Then let the Diwali sky carry it.</p>
+
+    <label class="sr-only" for="wish-input">Your Diwali wish</label>
+    <textarea id="wish-input" name="wish" rows="3" maxlength="180" placeholder="I wish..." required></textarea>
+
+    <div class="form-meta">
+      <p class="form-error" id="wish-error" role="alert" hidden>Please write a little wish first.</p>
+      <p class="form-count" aria-hidden="true"><span id="wish-count">0</span>/180</p>
+    </div>
+
+    <button class="btn btn--gold wish-submit" type="submit">Release my wish <span class="btn-spark" aria-hidden="true">✦</span></button>
+    <p class="form-privacy">Kept privately in this browser. Nothing is uploaded anywhere.</p>
+  </form>
+</dialog>
+
+<script>
+'use strict';
+
+/* ============================================================
+   EDITABLE CONFIG
+   ------------------------------------------------------------
+   Change the identity, speed, density and music here.
+   Visible copy lives in the HTML sections above.
+   ============================================================ */
+const CONFIG = {
+  // Identity — these update every [data-config] element
+  senderName: 'SAM',
+  brandName: 'CODISAM',
+  greeting: 'HAPPY DIWALI',
+
+  // Motion + effects
+  animationSpeed: 1,       // 1 = normal. 2 = twice as fast. 0.5 = dreamy.
+  particleDensity: 1,      // 0.5 = lighter. 1.5 = richer (use care on phones).
+  fireworksIntensity: 1,   // 0.7 = restrained. 1.4 = very extra.
+  autoFireworksInFinale: true,
+
+  // Intro choreography in milliseconds (before animationSpeed is applied)
+  introDelays: {
+    light: 900,
+    line1: 1750,
+    line2: 3550,
+    button: 5400
+  },
+
+  // Messages injected by JavaScript (also used for announcements)
+  messages: {
+    diya: 'May your life always shine with happiness and positivity.'
+  },
+
+  // Generative music — no audio files, no copyright worries.
+  // A soft drone plus occasional bells, created live by Web Audio.
+  music: {
+    volume: 0.35,
+    bellRange: [4200, 7600],                      // random gap in ms
+    scale: [587.33, 659.25, 739.99, 880, 987.77], // D major pentatonic
+    droneFrequencies: [73.42, 110, 146.83]        // D2, A2, D3
+  }
+};
+
+/* ============================================================
+   SMALL HELPERS
+   ============================================================ */
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+const TAU = Math.PI * 2;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const rand = (min, max) => min + Math.random() * (max - min);
+const pick = (items) => items[Math.floor(Math.random() * items.length)];
+
+function debounce(callback, wait) {
+  let timer = 0;
+  return function debounced(...args) {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => callback.apply(this, args), wait);
+  };
+}
+
+const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+let prefersReducedMotion = motionQuery.matches;
+
+const isCompactScreen = () => window.innerWidth < 700;
+
+const state = {
+  entered: false,
+  litDiyas: 0,
+  totalDiyas: 0,
+  giftOpened: false,
+  autoFireworks: false,
+  finaleShown: false,
+  toastTimer: 0,
+  lastBurst: 0
+};
+
+const wishStorageKey = 'diwali-wish-sam-v1';
+
+function readStoredWish() {
+  try {
+    return window.localStorage.getItem(wishStorageKey) || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function storeWish(text) {
+  try {
+    window.localStorage.setItem(wishStorageKey, text);
+  } catch (error) {
+    /* Private mode or storage disabled — the wish still works this visit. */
+  }
+}
+
+/* Apply the editable identity to every bound element */
+function applyConfig() {
+  const bindings = {
+    sender: CONFIG.senderName,
+    brand: CONFIG.brandName,
+    greeting: CONFIG.greeting
+  };
+
+  $$('[data-config]').forEach((element) => {
+    const value = bindings[element.dataset.config];
+    if (typeof value === 'string') element.textContent = value;
+  });
+
+  document.title = `${CONFIG.greeting} — From ${CONFIG.senderName} @ ${CONFIG.brandName}`;
+  document.documentElement.style.setProperty(
+    '--speed-factor',
+    String(1 / clamp(CONFIG.animationSpeed, 0.25, 4))
+  );
+}
+
+/* ============================================================
+   TOAST + LIGHT WAVE
+   ============================================================ */
+const toastElement = $('#toast');
+
+function showToast(message, duration = 3400) {
+  if (!toastElement) return;
+  toastElement.textContent = message;
+  toastElement.classList.add('is-visible');
+  window.clearTimeout(state.toastTimer);
+  state.toastTimer = window.setTimeout(() => {
+    toastElement.classList.remove('is-visible');
+  }, duration);
+}
+
+function createLightWave(x, y) {
+  const wave = document.createElement('span');
+  wave.className = 'light-wave';
+  wave.style.left = `${x}px`;
+  wave.style.top = `${y}px`;
+  document.body.appendChild(wave);
+  wave.addEventListener('animationend', () => wave.remove());
+  window.setTimeout(() => wave.remove(), 2000);
+}
+
+/* ============================================================
+   GENERATIVE BACKGROUND MUSIC (Web Audio API)
+   ------------------------------------------------------------
+   Nothing plays until the visitor presses the music button.
+   Everything is synthesised in the browser — no files needed.
+   ============================================================ */
+const music = (() => {
+  let context = null;
+  let master = null;
+  let bellTimer = 0;
+  let suspendTimer = 0;
+  let enabled = false;
+
+  const currentVolume = () => clamp(CONFIG.music.volume, 0, 1);
+
+  function buildDrone() {
+    const droneGain = context.createGain();
+    droneGain.gain.value = 0.18;
+
+    const filter = context.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 680;
+    filter.Q.value = 0.7;
+
+    droneGain.connect(filter);
+    filter.connect(master);
+
+    CONFIG.music.droneFrequencies.forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = index === 0 ? 'sine' : 'triangle';
+      oscillator.frequency.value = frequency;
+
+      const voice = context.createGain();
+      voice.gain.value = index === 0 ? 0.55 : 0.16;
+      oscillator.connect(voice);
+      voice.connect(droneGain);
+      oscillator.start();
+    });
+
+    // Very slow filter movement keeps the drone from sounding static
+    const lfo = context.createOscillator();
+    lfo.frequency.value = 0.045;
+    const lfoGain = context.createGain();
+    lfoGain.gain.value = 170;
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start();
+  }
+
+  function ensureContext() {
+    if (context) return true;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return false;
+
+    try {
+      context = new AudioContextClass();
+      master = context.createGain();
+      master.gain.value = 0.0001;
+      master.connect(context.destination);
+      buildDrone();
+      return true;
+    } catch (error) {
+      context = null;
+      master = null;
+      return false;
+    }
+  }
+
+  function playNote(frequency, when, duration = 2.4, level = 0.12) {
+    if (!context || !master) return;
+
+    const oscillator = context.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, when);
+
+    const overtone = context.createOscillator();
+    overtone.type = 'triangle';
+    overtone.frequency.setValueAtTime(frequency * 2.005, when);
+
+    const envelope = context.createGain();
+    const overtoneLevel = context.createGain();
+    overtoneLevel.gain.value = 0.18;
+
+    envelope.gain.setValueAtTime(0.0001, when);
+    envelope.gain.exponentialRampToValueAtTime(level, when + 0.02);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+
+    oscillator.connect(envelope);
+    overtone.connect(overtoneLevel);
+    overtoneLevel.connect(envelope);
+    envelope.connect(master);
+
+    oscillator.start(when);
+    overtone.start(when);
+    oscillator.stop(when + duration + 0.05);
+    overtone.stop(when + duration + 0.05);
+  }
+
+  function playBell() {
+    if (!context || !enabled) return;
+    const now = context.currentTime + 0.05;
+    const note = pick(CONFIG.music.scale);
+    playNote(note, now, 3.2, 0.085);
+    if (Math.random() < 0.4) {
+      playNote(pick(CONFIG.music.scale) * 2, now + rand(0.25, 0.7), 2.2, 0.035);
+    }
+  }
+
+  function scheduleBell(first = false) {
+    window.clearTimeout(bellTimer);
+    const [minimum, maximum] = CONFIG.music.bellRange;
+    const delay = first ? 1100 : rand(minimum, maximum);
+    bellTimer = window.setTimeout(() => {
+      if (!enabled) return;
+      playBell();
+      scheduleBell(false);
+    }, delay);
+  }
+
+  async function start() {
+    if (!ensureContext()) return false;
+    try {
+      if (context.state === 'suspended') await context.resume();
+    } catch (error) {
+      return false;
+    }
+
+    enabled = true;
+    window.clearTimeout(suspendTimer);
+
+    const now = context.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now);
+    master.gain.setTargetAtTime(currentVolume() * 0.55, now, 0.3);
+    scheduleBell(true);
+    return true;
+  }
+
+  function stop() {
+    enabled = false;
+    window.clearTimeout(bellTimer);
+    if (!context) return;
+
+    const now = context.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setTargetAtTime(0.0001, now, 0.18);
+
+    window.clearTimeout(suspendTimer);
+    suspendTimer = window.setTimeout(() => {
+      if (!enabled && context && context.state === 'running') {
+        context.suspend().catch(() => {});
+      }
+    }, 1300);
+  }
+
+  function setVolume(value) {
+    CONFIG.music.volume = clamp(value, 0, 1);
+    if (context && enabled) {
+      const now = context.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setTargetAtTime(currentVolume() * 0.55, now, 0.08);
+    }
+  }
+
+  function chime(frequency) {
+    if (!enabled || !context) return;
+    playNote(frequency, context.currentTime + 0.01, 1.6, 0.06);
+  }
+
+  function suspend() {
+    if (context && context.state === 'running') context.suspend().catch(() => {});
+  }
+
+  function resume() {
+    if (enabled && context && context.state === 'suspended') context.resume().catch(() => {});
+  }
+
+  return {
+    start,
+    stop,
+    setVolume,
+    chime,
+    suspend,
+    resume,
+    get enabled() { return enabled; },
+    get context() { return context; }
+  };
+})();
+
+/* ============================================================
+   CINEMATIC INTRO
+   ============================================================ */
+const introElement = $('#intro');
+const introScreen = { timers: [], entered: false };
+
+const introParticles = (() => {
+  const canvas = $('#intro-canvas');
+  const context = canvas.getContext('2d');
+  let width = 0;
+  let height = 0;
+  let rafId = 0;
+  let running = false;
+  let lastTime = 0;
+  let particles = [];
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (running) buildParticles();
+  }
+
+  function buildParticles() {
+    const density = clamp(CONFIG.particleDensity, 0.3, 2);
+    const count = Math.round(90 * density * (isCompactScreen() ? 0.62 : 1));
+    particles = Array.from({ length: Math.max(30, count) }, () => ({
+      x: rand(0, width),
+      y: rand(0, height),
+      radius: rand(0.4, 1.9),
+      speedY: rand(6, 22),
+      speedX: rand(-5, 5),
+      phase: rand(0, TAU),
+      alpha: rand(0.18, 0.75)
+    }));
+  }
+
+  function draw(now, dt) {
+    context.clearRect(0, 0, width, height);
+
+    for (const particle of particles) {
+      particle.y -= particle.speedY * dt;
+      particle.x += particle.speedX * dt + Math.sin(now * 0.00028 + particle.phase) * 0.08;
+
+      if (particle.y < -6) {
+        particle.y = height + 6;
+        particle.x = rand(0, width);
+      }
+      if (particle.x < -6) particle.x = width + 6;
+      if (particle.x > width + 6) particle.x = -6;
+
+      const twinkle = 0.55 + 0.45 * Math.sin(now * 0.0016 + particle.phase);
+      context.fillStyle = `rgba(255, 206, 120, ${(particle.alpha * twinkle).toFixed(3)})`;
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.radius, 0, TAU);
+      context.fill();
+    }
+  }
+
+  function frame(now) {
+    if (!running) return;
+    rafId = window.requestAnimationFrame(frame);
+    if (document.hidden) return;
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+    lastTime = now;
+    draw(now, dt);
+  }
+
+  return {
+    start() {
+      if (running) return;
+      running = true;
+      resize();
+      buildParticles();
+      lastTime = performance.now();
+      if (prefersReducedMotion) {
+        draw(lastTime, 0);
+        return;
+      }
+      rafId = window.requestAnimationFrame(frame);
+    },
+    stop() {
+      running = false;
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    },
+    resize
+  };
+})();
+
+function setupIntro() {
+  const diya = $('#intro-diya');
+  const lineOne = $('#intro-line-1');
+  const lineTwo = $('#intro-line-2');
+  const enterButton = $('#enter-site');
+  const skipButton = $('#skip-intro');
+
+  if (!introElement || !diya || !enterButton || !skipButton) return;
+
+  // Keep the page still behind the opening sequence
+  document.body.style.overflow = 'hidden';
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+
+  const header = $('#site-header');
+  const main = $('#main');
+  if (header) header.inert = true;
+  if (main) main.inert = true;
+
+  enterButton.tabIndex = -1;
+
+  const schedule = (callback, delay) => {
+    const timer = window.setTimeout(() => {
+      if (!introScreen.entered) callback();
+    }, delay);
+    introScreen.timers.push(timer);
+  };
+
+  const revealEnterButton = () => {
+    enterButton.classList.add('is-visible');
+    enterButton.tabIndex = 0;
+  };
+
+  introParticles.start();
+
+  if (prefersReducedMotion) {
+    diya.classList.add('is-lit');
+    lineOne.classList.add('is-visible');
+    lineTwo.classList.add('is-visible');
+    revealEnterButton();
+  } else {
+    const speed = clamp(CONFIG.animationSpeed, 0.25, 4);
+    schedule(() => diya.classList.add('is-lit'), CONFIG.introDelays.light / speed);
+    schedule(() => lineOne.classList.add('is-visible'), CONFIG.introDelays.line1 / speed);
+    schedule(() => lineTwo.classList.add('is-visible'), CONFIG.introDelays.line2 / speed);
+    schedule(revealEnterButton, CONFIG.introDelays.button / speed);
+  }
+
+  // Move screen-reader focus into the opening dialog without drawing a button outline
+  introElement.tabIndex = -1;
+  window.setTimeout(() => {
+    if (!introScreen.entered) introElement.focus({ preventScroll: true });
+  }, prefersReducedMotion ? 100 : 420);
+
+  skipButton.addEventListener('click', enterExperience);
+  enterButton.addEventListener('click', enterExperience);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !introScreen.entered) enterExperience();
+  });
+
+  // Handy for sharing direct links or taking screenshots: file.html?intro=0
+  if (new URLSearchParams(window.location.search).get('intro') === '0') {
+    window.setTimeout(enterExperience, 180);
+  }
+}
+
+function enterExperience() {
+  if (introScreen.entered) return;
+  introScreen.entered = true;
+  state.entered = true;
+
+  introScreen.timers.forEach((timer) => window.clearTimeout(timer));
+  introScreen.timers = [];
+  introParticles.stop();
+
+  document.body.classList.remove('intro-open');
+  document.body.classList.add('is-celebrating');
+  document.body.style.overflow = '';
+
+  const header = $('#site-header');
+  const main = $('#main');
+  if (header) header.inert = false;
+  if (main) main.inert = false;
+
+  if (introElement) {
+    introElement.classList.add('is-leaving');
+    introElement.setAttribute('aria-hidden', 'true');
+  }
+
+  const hideDelay = prefersReducedMotion ? 80 : 1300;
+  window.setTimeout(() => {
+    if (introElement) introElement.hidden = true;
+  }, hideDelay);
+
+  ambientEffects.start();
+  fireworksEffects.start();
+
+  window.setTimeout(() => {
+    const title = $('#hero-title');
+    if (title) title.focus({ preventScroll: true });
+  }, hideDelay + 90);
+
+  if (!prefersReducedMotion) {
+    window.setTimeout(() => {
+      fireworksEffects.spawn(window.innerWidth * 0.5, window.innerHeight * 0.32, {
+        count: 34,
+        shape: 'burst'
+      });
+    }, hideDelay + 420);
+  }
+}
+
+/* ============================================================
+   AMBIENT NIGHT SKY
+   ------------------------------------------------------------
+   Stars, golden dust and drifting flower petals.
+   One canvas, capped pixel ratio, paused when the tab is hidden.
+   ============================================================ */
+const ambientEffects = (() => {
+  const canvas = $('#ambient-canvas');
+  const context = canvas.getContext('2d');
+  let width = 0;
+  let height = 0;
+  let running = false;
+  let rafId = 0;
+  let lastTime = 0;
+  let stars = [];
+  let dust = [];
+  let petals = [];
+
+  const starColors = ['255, 233, 168', '246, 196, 83', '255, 255, 255', '255, 157, 46'];
+  const petalColors = ['255, 93, 143', '255, 122, 26', '246, 196, 83', '201, 42, 42'];
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (running) build();
+  }
+
+  function build() {
+    const density = clamp(CONFIG.particleDensity, 0.3, 2);
+    const compact = isCompactScreen();
+
+    stars = Array.from({ length: Math.round((compact ? 58 : 110) * density) }, () => ({
+      x: rand(0, width),
+      y: rand(0, height * 0.94),
+      radius: rand(0.35, 1.7),
+      alpha: rand(0.14, 0.68),
+      phase: rand(0, TAU),
+      twinkle: rand(0.0006, 0.0022),
+      color: pick(starColors)
+    }));
+
+    dust = Array.from({ length: Math.round((compact ? 32 : 58) * density) }, () => ({
+      x: rand(0, width),
+      y: rand(0, height),
+      radius: rand(0.5, 2.3),
+      speedY: rand(7, 20),
+      speedX: rand(-4, 4),
+      alpha: rand(0.1, 0.38),
+      phase: rand(0, TAU)
+    }));
+
+    petals = Array.from({ length: Math.round((compact ? 6 : 11) * density) }, () => ({
+      x: rand(0, width),
+      y: rand(-height * 0.2, height),
+      size: rand(4.5, 10),
+      speedY: rand(8, 19),
+      speedX: rand(-6, 6),
+      rotation: rand(0, TAU),
+      spin: rand(-0.5, 0.5),
+      drift: rand(0.0004, 0.0012),
+      phase: rand(0, TAU),
+      alpha: rand(0.1, 0.28),
+      color: pick(petalColors)
+    }));
+  }
+
+  function draw(now, dt) {
+    context.clearRect(0, 0, width, height);
+
+    // Twinkling stars
+    for (const star of stars) {
+      const twinkle = 0.58 + 0.42 * Math.sin(now * star.twinkle + star.phase);
+      context.fillStyle = `rgba(${star.color}, ${(star.alpha * twinkle).toFixed(3)})`;
+      context.beginPath();
+      context.arc(star.x, star.y, star.radius, 0, TAU);
+      context.fill();
+    }
+
+    // Slow golden dust
+    for (const mote of dust) {
+      mote.y -= mote.speedY * dt;
+      mote.x += mote.speedX * dt + Math.sin(now * 0.0004 + mote.phase) * 0.12;
+      if (mote.y < -8) {
+        mote.y = height + 8;
+        mote.x = rand(0, width);
+      }
+      if (mote.x < -8) mote.x = width + 8;
+      if (mote.x > width + 8) mote.x = -8;
+
+      const shimmer = 0.6 + 0.4 * Math.sin(now * 0.0012 + mote.phase);
+      context.fillStyle = `rgba(255, 196, 83, ${(mote.alpha * shimmer).toFixed(3)})`;
+      context.beginPath();
+      context.arc(mote.x, mote.y, mote.radius, 0, TAU);
+      context.fill();
+    }
+
+    // Flower petals drifting down the screen
+    for (const petal of petals) {
+      petal.y += petal.speedY * dt;
+      petal.x += petal.speedX * dt + Math.sin(now * petal.drift + petal.phase) * 0.25;
+      petal.rotation += petal.spin * dt;
+
+      if (petal.y > height + 20) {
+        petal.y = -20;
+        petal.x = rand(0, width);
+      }
+      if (petal.x < -20) petal.x = width + 20;
+      if (petal.x > width + 20) petal.x = -20;
+
+      context.save();
+      context.translate(petal.x, petal.y);
+      context.rotate(petal.rotation);
+      context.fillStyle = `rgba(${petal.color}, ${petal.alpha.toFixed(3)})`;
+      context.beginPath();
+      context.ellipse(0, 0, petal.size, petal.size * 0.4, 0, 0, TAU);
+      context.fill();
+      context.restore();
+    }
+  }
+
+  function frame(now) {
+    if (!running) return;
+    rafId = window.requestAnimationFrame(frame);
+    if (document.hidden) return;
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+    lastTime = now;
+    draw(now, dt);
+  }
+
+  return {
+    start() {
+      if (running) return;
+      running = true;
+      resize();
+      lastTime = performance.now();
+      if (prefersReducedMotion) {
+        draw(lastTime, 0);
+        return;
+      }
+      rafId = window.requestAnimationFrame(frame);
+    },
+    resize
+  };
+})();
+
+/* ============================================================
+   FIREWORKS ENGINE
+   ------------------------------------------------------------
+   Rockets rise from the bottom, explode into glowing sparks, and
+   paint short light trails. Tap anywhere to burst at the pointer.
+   ============================================================ */
+const fireworksEffects = (() => {
+  const canvas = $('#fireworks-canvas');
+  const context = canvas.getContext('2d');
+  let width = 0;
+  let height = 0;
+  let running = false;
+  let rafId = 0;
+  let lastTime = 0;
+  let particles = [];
+  let rockets = [];
+  let auto = false;
+  let nextAuto = 0;
+
+  const palettes = [
+    ['255, 233, 168', '246, 196, 83', '255, 157, 46'],
+    ['255, 196, 83', '255, 122, 26', '255, 93, 143', '255, 233, 168'],
+    ['255, 93, 143', '139, 92, 246', '246, 196, 83', '255, 240, 220'],
+    ['255, 157, 46', '255, 233, 168', '139, 92, 246'],
+    ['255, 255, 255', '255, 233, 168', '255, 196, 83']
+  ];
+
+  const maxParticles = () => (isCompactScreen() ? 430 : 1000);
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, isCompactScreen() ? 1.5 : 2);
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    particles = [];
+    rockets = [];
+  }
+
+  function trimParticles() {
+    const limit = maxParticles();
+    if (particles.length > limit) {
+      particles.splice(0, particles.length - limit);
+    }
+  }
+
+  function spawn(x, y, options = {}) {
+    if (prefersReducedMotion) return;
+    if (!width || !height) resize();
+
+    const shape = options.shape || pick(['burst', 'ring', 'willow']);
+    const palette = options.palette || pick(palettes);
+    const density = clamp(CONFIG.particleDensity, 0.3, 2);
+    const intensity = clamp(CONFIG.fireworksIntensity, 0.2, 2);
+    const compactScale = isCompactScreen() ? 0.55 : 1;
+    const count = Math.max(8, Math.round((options.count || 78) * density * intensity * compactScale));
+
+    for (let index = 0; index < count; index += 1) {
+      const angle = rand(0, TAU);
+      let speed;
+
+      if (shape === 'ring') {
+        speed = rand(170, 205);
+      } else if (shape === 'willow') {
+        speed = rand(75, 245);
+      } else {
+        speed = rand(45, 300);
+      }
+
+      if (options.speed) speed = options.speed * rand(0.9, 1.1);
+
+      particles.push({
+        x,
+        y,
+        trail: [{ x, y }, { x, y }, { x, y }],
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: rand(shape === 'willow' ? 1.4 : 0.85, shape === 'willow' ? 2.3 : 1.7),
+        size: rand(0.9, 2.5),
+        color: pick(palette),
+        gravity: shape === 'willow' ? 185 : rand(85, 130),
+        drag: shape === 'willow' ? 0.987 : rand(0.968, 0.98),
+        twinkle: Math.random() < 0.3,
+        glow: Math.random() < 0.16,
+        phase: rand(0, TAU)
+      });
+    }
+
+    trimParticles();
+  }
+
+  function launchRocket() {
+    if (prefersReducedMotion) return;
+    if (!width || !height) resize();
+
+    rockets.push({
+      x: rand(width * 0.14, width * 0.86),
+      y: height + 18,
+      previousX: 0,
+      previousY: 0,
+      vx: rand(-34, 34),
+      vy: -rand(560, 760),
+      targetY: rand(height * 0.16, height * 0.43),
+      trail: [],
+      count: rand(85, 125),
+      shape: pick(['burst', 'burst', 'ring', 'willow']),
+      palette: pick(palettes)
+    });
+  }
+
+  function updateAndDrawParticles(dt) {
+    for (let index = particles.length - 1; index >= 0; index -= 1) {
+      const particle = particles[index];
+      particle.life += dt;
+
+      if (particle.life >= particle.maxLife) {
+        particles.splice(index, 1);
+        continue;
+      }
+
+      const damping = Math.pow(particle.drag, dt * 60);
+      particle.vx *= damping;
+      particle.vy = particle.vy * damping + particle.gravity * dt;
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+
+      particle.trail.push({ x: particle.x, y: particle.y });
+      if (particle.trail.length > 4) particle.trail.shift();
+
+      const lifeProgress = particle.life / particle.maxLife;
+      let alpha = 1 - lifeProgress;
+      if (particle.twinkle) {
+        alpha *= 0.55 + 0.45 * Math.sin(particle.life * 28 + particle.phase);
+      }
+      alpha = clamp(alpha, 0, 1);
+
+      if (alpha < 0.015) continue;
+
+      context.strokeStyle = `rgba(${particle.color}, ${alpha.toFixed(3)})`;
+      context.lineWidth = Math.max(0.5, particle.size * (1 - lifeProgress * 0.5));
+      context.beginPath();
+      context.moveTo(particle.trail[0].x, particle.trail[0].y);
+      for (let trailIndex = 1; trailIndex < particle.trail.length; trailIndex += 1) {
+        context.lineTo(particle.trail[trailIndex].x, particle.trail[trailIndex].y);
+      }
+      context.stroke();
+
+      if (particle.glow) {
+        context.fillStyle = `rgba(255, 246, 214, ${(alpha * 0.8).toFixed(3)})`;
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.size * 0.8, 0, TAU);
+        context.fill();
+      }
+    }
+  }
+
+  function updateAndDrawRockets(dt) {
+    for (let index = rockets.length - 1; index >= 0; index -= 1) {
+      const rocket = rockets[index];
+      rocket.previousX = rocket.x;
+      rocket.previousY = rocket.y;
+      rocket.x += rocket.vx * dt;
+      rocket.y += rocket.vy * dt;
+
+      rocket.trail.push({ x: rocket.x, y: rocket.y });
+      if (rocket.trail.length > 6) rocket.trail.shift();
+
+      context.strokeStyle = 'rgba(255, 233, 168, 0.85)';
+      context.lineWidth = 1.7;
+      context.beginPath();
+      context.moveTo(rocket.trail[0].x, rocket.trail[0].y);
+      for (let trailIndex = 1; trailIndex < rocket.trail.length; trailIndex += 1) {
+        context.lineTo(rocket.trail[trailIndex].x, rocket.trail[trailIndex].y);
+      }
+      context.stroke();
+
+      context.fillStyle = 'rgba(255, 250, 225, 0.95)';
+      context.beginPath();
+      context.arc(rocket.x, rocket.y, 2.2, 0, TAU);
+      context.fill();
+
+      if (rocket.y <= rocket.targetY || rocket.y < -30) {
+        spawn(rocket.x, Math.max(rocket.y, 20), {
+          count: rocket.count,
+          shape: rocket.shape,
+          palette: rocket.palette
+        });
+        rockets.splice(index, 1);
+      }
+    }
+  }
+
+  function frame(now) {
+    if (!running) return;
+    rafId = window.requestAnimationFrame(frame);
+    if (document.hidden) return;
+
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+    lastTime = now;
+
+    if (auto && !prefersReducedMotion && now >= nextAuto) {
+      launchRocket();
+      nextAuto = now + rand(750, 1450) / clamp(CONFIG.animationSpeed, 0.3, 3);
+    }
+
+    context.globalCompositeOperation = 'source-over';
+    context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = 'lighter';
+
+    updateAndDrawParticles(dt);
+    updateAndDrawRockets(dt);
+
+    context.globalCompositeOperation = 'source-over';
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resize();
+    lastTime = performance.now();
+    rafId = window.requestAnimationFrame(frame);
+  }
+
+  function setAuto(enabled) {
+    if (enabled && prefersReducedMotion) return false;
+    auto = enabled;
+    nextAuto = enabled ? performance.now() + 250 : 0;
+    return auto;
+  }
+
+  function isAuto() {
+    return auto;
+  }
+
+  function finaleSequence() {
+    if (prefersReducedMotion) return;
+    const spots = [
+      [0.18, 0.33],
+      [0.36, 0.2],
+      [0.58, 0.18],
+      [0.79, 0.31],
+      [0.5, 0.36],
+      [0.28, 0.46],
+      [0.71, 0.45]
+    ];
+
+    spots.forEach((spot, index) => {
+      window.setTimeout(() => {
+        spawn(window.innerWidth * spot[0], window.innerHeight * spot[1], {
+          count: 72 + (index % 3) * 16,
+          shape: index % 2 === 0 ? 'ring' : 'burst',
+          palette: palettes[index % palettes.length]
+        });
+      }, index * 330);
+    });
+  }
+
+  return {
+    start,
+    resize,
+    spawn,
+    launchRocket,
+    setAuto,
+    isAuto,
+    finaleSequence
+  };
+})();
+
+/* ============================================================
+   INTERACTIVE RANGOLI
+   ------------------------------------------------------------
+   Drawn with the Canvas 2D API using rotational symmetry.
+   It blooms into view, breathes with the pointer, and can spin.
+   ============================================================ */
+const rangoliEffects = (() => {
+  const canvas = $('#rangoli-canvas');
+  if (!canvas) {
+    return { start() {}, resize() {}, spin() {} };
+  }
+
+  const context = canvas.getContext('2d');
+  let size = 640;
+  let visible = false;
+  let running = false;
+  let rafId = 0;
+  let lastTime = 0;
+  let revealStart = 0;
+  let drawnStatic = false;
+  let rotation = 0;
+  let spinEnergy = 0;
+
+  const pointer = {
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    rotation: 0,
+    targetRotation: 0
+  };
+
+  const colors = {
+    gold: '246, 196, 83',
+    cream: '255, 233, 168',
+    saffron: '255, 122, 26',
+    rose: '255, 93, 143',
+    violet: '139, 92, 246',
+    red: '201, 42, 42'
+  };
+
+  const rgba = (color, alpha) => `rgba(${color}, ${alpha})`;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    let cssWidth = Math.round(rect.width);
+
+    if (!cssWidth) {
+      cssWidth = Math.min(window.innerWidth - 40, 620);
+    }
+
+    size = Math.max(220, cssWidth);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(size * dpr));
+    canvas.height = Math.max(1, Math.round(size * dpr));
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawnStatic = false;
+
+    if (visible) draw(performance.now(), 0);
+  }
+
+  /* One symmetrical petal, drawn upwards from the centre */
+  function petal(innerRadius, outerRadius, halfWidth, fill, stroke) {
+    const shoulder = innerRadius + (outerRadius - innerRadius) * 0.38;
+
+    context.beginPath();
+    context.moveTo(0, -innerRadius);
+    context.bezierCurveTo(halfWidth, -shoulder, halfWidth * 0.82, -outerRadius, 0, -outerRadius);
+    context.bezierCurveTo(-halfWidth * 0.82, -outerRadius, -halfWidth, -shoulder, 0, -innerRadius);
+    context.closePath();
+    context.fillStyle = fill;
+    context.fill();
+
+    if (stroke) {
+      context.strokeStyle = stroke;
+      context.lineWidth = Math.max(0.7, size * 0.0014);
+      context.stroke();
+    }
+  }
+
+  function draw(now, dt) {
+    const reveal = prefersReducedMotion
+      ? 1
+      : clamp((now - revealStart) / 3200, 0, 1);
+
+    if (!prefersReducedMotion && !revealStart) return;
+
+    context.clearRect(0, 0, size, size);
+
+    if (!prefersReducedMotion) {
+      pointer.x += (pointer.targetX - pointer.x) * 0.06;
+      pointer.y += (pointer.targetY - pointer.y) * 0.06;
+      pointer.rotation += (pointer.targetRotation - pointer.rotation) * 0.05;
+      rotation += (0.035 + spinEnergy) * dt;
+      spinEnergy *= Math.pow(0.18, dt);
+    }
+
+    const centre = size / 2;
+    const radius = size * 0.445;
+    const cx = centre + pointer.x;
+    const cy = centre + pointer.y;
+
+    // Warm bloom behind the rangoli
+    const bloom = context.createRadialGradient(cx, cy, radius * 0.04, cx, cy, radius * 1.05);
+    bloom.addColorStop(0, rgba(colors.gold, 0.2 * reveal));
+    bloom.addColorStop(0.55, rgba(colors.violet, 0.06 * reveal));
+    bloom.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = bloom;
+    context.beginPath();
+    context.arc(cx, cy, radius * 1.05, 0, TAU);
+    context.fill();
+
+    // The circular clip makes the artwork bloom outward
+    context.save();
+    context.beginPath();
+    context.arc(cx, cy, radius * 1.12 * reveal, 0, TAU);
+    context.clip();
+    context.translate(cx, cy);
+    context.rotate(rotation + pointer.rotation);
+
+    // Outer guide rings
+    context.strokeStyle = rgba(colors.gold, 0.26);
+    context.lineWidth = 1;
+    context.setLineDash([1, 8]);
+    context.beginPath();
+    context.arc(0, 0, radius * 0.99, 0, TAU);
+    context.stroke();
+    context.setLineDash([]);
+
+    context.strokeStyle = rgba(colors.gold, 0.16);
+    context.beginPath();
+    context.arc(0, 0, radius * 0.82, 0, TAU);
+    context.stroke();
+
+    // Outer petal ring — saffron and violet
+    for (let index = 0; index < 16; index += 1) {
+      context.save();
+      context.rotate((index * TAU) / 16);
+      petal(
+        radius * 0.62,
+        radius * 0.95,
+        radius * 0.135,
+        index % 2 === 0 ? rgba(colors.saffron, 0.32) : rgba(colors.violet, 0.34),
+        rgba(colors.gold, 0.5)
+      );
+      context.restore();
+    }
+
+    // Small petals tucked between the large ones
+    for (let index = 0; index < 16; index += 1) {
+      context.save();
+      context.rotate((index * TAU) / 16 + TAU / 32);
+      petal(
+        radius * 0.7,
+        radius * 0.88,
+        radius * 0.055,
+        rgba(colors.rose, 0.34),
+        rgba(colors.gold, 0.4)
+      );
+      context.restore();
+    }
+
+    // Tiny dots on the outer rim
+    for (let index = 0; index < 32; index += 1) {
+      const angle = (index * TAU) / 32 + TAU / 64;
+      const dotRadius = radius * (index % 3 === 0 ? 0.011 : 0.007);
+      context.fillStyle = index % 2 === 0
+        ? rgba(colors.gold, 0.75)
+        : rgba(colors.rose, 0.65);
+      context.beginPath();
+      context.arc(Math.cos(angle) * radius * 0.955, Math.sin(angle) * radius * 0.955, dotRadius, 0, TAU);
+      context.fill();
+    }
+
+    // Middle petal ring — rose and gold
+    for (let index = 0; index < 16; index += 1) {
+      context.save();
+      context.rotate((index * TAU) / 16 + TAU / 32);
+      petal(
+        radius * 0.42,
+        radius * 0.7,
+        radius * 0.108,
+        index % 2 === 0 ? rgba(colors.rose, 0.36) : rgba(colors.gold, 0.3),
+        rgba(colors.gold, 0.48)
+      );
+      context.restore();
+    }
+
+    // Concentric dotted rings
+    context.setLineDash([2, 7]);
+    context.strokeStyle = rgba(colors.cream, 0.3);
+    context.beginPath();
+    context.arc(0, 0, radius * 0.54, 0, TAU);
+    context.stroke();
+    context.beginPath();
+    context.arc(0, 0, radius * 0.32, 0, TAU);
+    context.stroke();
+    context.setLineDash([]);
+
+    // Inner lotus — eight warm petals
+    context.shadowColor = 'rgba(246, 196, 83, 0.42)';
+    context.shadowBlur = 10;
+    for (let index = 0; index < 8; index += 1) {
+      context.save();
+      context.rotate((index * TAU) / 8);
+      petal(
+        radius * 0.15,
+        radius * 0.45,
+        radius * 0.12,
+        index % 2 === 0 ? rgba(colors.saffron, 0.5) : rgba(colors.gold, 0.42),
+        rgba(colors.gold, 0.62)
+      );
+      context.restore();
+    }
+    context.shadowBlur = 0;
+
+    // Glowing centre
+    const centreGlow = context.createRadialGradient(0, 0, 0, 0, 0, radius * 0.17);
+    centreGlow.addColorStop(0, rgba(colors.cream, 0.85));
+    centreGlow.addColorStop(0.45, rgba(colors.gold, 0.45));
+    centreGlow.addColorStop(1, rgba(colors.gold, 0));
+    context.fillStyle = centreGlow;
+    context.beginPath();
+    context.arc(0, 0, radius * 0.17, 0, TAU);
+    context.fill();
+
+    context.strokeStyle = rgba(colors.gold, 0.9);
+    context.lineWidth = Math.max(1, size * 0.0016);
+    context.beginPath();
+    context.arc(0, 0, radius * 0.105, 0, TAU);
+    context.stroke();
+
+    context.fillStyle = rgba(colors.cream, 0.92);
+    context.beginPath();
+    context.arc(0, 0, radius * 0.025, 0, TAU);
+    context.fill();
+
+    // Eight glowing seed dots around the centre
+    context.fillStyle = rgba(colors.gold, 0.85);
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (index * TAU) / 8;
+      context.beginPath();
+      context.arc(Math.cos(angle) * radius * 0.065, Math.sin(angle) * radius * 0.065, radius * 0.008, 0, TAU);
+      context.fill();
+    }
+
+    // Slowly orbiting sparkles
+    context.shadowColor = 'rgba(246, 196, 83, 0.75)';
+    context.shadowBlur = 8;
+    for (let index = 0; index < 10; index += 1) {
+      const angle = now * 0.00024 + (index * TAU) / 10;
+      const orbit = radius * (index % 2 === 0 ? 0.76 : 0.6);
+      context.fillStyle = index % 3 === 0
+        ? rgba(colors.rose, 0.8)
+        : rgba(colors.cream, 0.75);
+      context.beginPath();
+      context.arc(Math.cos(angle) * orbit, Math.sin(angle) * orbit, radius * 0.009, 0, TAU);
+      context.fill();
+    }
+    context.shadowBlur = 0;
+
+    context.restore();
+
+    // Flower petals drifting around the glowing rangoli
+    context.save();
+    context.shadowColor = 'rgba(255, 157, 46, 0.55)';
+    context.shadowBlur = 7;
+
+    for (let index = 0; index < 12; index += 1) {
+      const angle = prefersReducedMotion
+        ? (index * TAU) / 12
+        : now * 0.00011 + (index * TAU) / 12;
+      const orbit = radius * (
+        1.02 + 0.02 * Math.sin((prefersReducedMotion ? 0 : now * 0.0008) + index)
+      );
+      const petalX = cx + Math.cos(angle) * orbit;
+      const petalY = cy + Math.sin(angle) * orbit;
+      const tilt = angle + Math.PI / 2 + (
+        prefersReducedMotion ? 0 : Math.sin(now * 0.0009 + index) * 0.45
+      );
+
+      context.save();
+      context.translate(petalX, petalY);
+      context.rotate(tilt);
+      context.fillStyle = index % 3 === 0
+        ? rgba(colors.rose, 0.6)
+        : index % 3 === 1
+          ? rgba(colors.gold, 0.55)
+          : rgba(colors.saffron, 0.5);
+      context.beginPath();
+      context.ellipse(0, 0, radius * 0.014, radius * 0.006, 0, 0, TAU);
+      context.fill();
+      context.restore();
+    }
+
+    context.shadowBlur = 0;
+    context.restore();
+  }
+
+  function frame(now) {
+    if (!running) return;
+    rafId = window.requestAnimationFrame(frame);
+    if (document.hidden || !visible) return;
+
+    if (prefersReducedMotion) {
+      if (!drawnStatic) {
+        draw(now, 0);
+        drawnStatic = true;
+      }
+      return;
+    }
+
+    const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+    lastTime = now;
+    draw(now, dt);
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resize();
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.target !== canvas) return;
+          visible = entry.isIntersecting;
+          if (visible) {
+            if (!revealStart) revealStart = performance.now();
+            lastTime = performance.now();
+          }
+        });
+      }, { threshold: 0.14 });
+      observer.observe(canvas);
+    } else {
+      visible = true;
+      revealStart = performance.now();
+    }
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (prefersReducedMotion) return;
+      const rect = canvas.getBoundingClientRect();
+      const nx = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 2, -1, 1);
+      const ny = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 2, -1, 1);
+      pointer.targetX = nx * 14;
+      pointer.targetY = ny * 14;
+      pointer.targetRotation = nx * 0.05;
+    });
+
+    canvas.addEventListener('pointerleave', () => {
+      pointer.targetX = 0;
+      pointer.targetY = 0;
+      pointer.targetRotation = 0;
+    });
+
+    rafId = window.requestAnimationFrame(frame);
+  }
+
+  function spin() {
+    spinEnergy = Math.min(spinEnergy + 3.1, 4.6);
+    if (!revealStart) revealStart = performance.now();
+    visible = true;
+  }
+
+  return { start, resize, spin };
+})();
+
+/* ============================================================
+   HEADER, PARALLAX + SCROLL REVEALS
+   ============================================================ */
+function setupHeaderScroll() {
+  const header = $('#site-header');
+  if (!header) return;
+
+  const updateHeader = () => {
+    header.classList.toggle('is-scrolled', window.scrollY > 26);
+  };
+
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  updateHeader();
+}
+
+function setupHeroParallax() {
+  const hero = $('#hero');
+  if (!hero) return;
+
+  hero.addEventListener('pointermove', (event) => {
+    if (prefersReducedMotion || event.pointerType === 'touch') return;
+    const rect = hero.getBoundingClientRect();
+    const nx = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 2, -1, 1);
+    const ny = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 2, -1, 1);
+    hero.style.setProperty('--parallax-x', nx.toFixed(3));
+    hero.style.setProperty('--parallax-y', ny.toFixed(3));
+  });
+
+  hero.addEventListener('pointerleave', () => {
+    hero.style.setProperty('--parallax-x', '0');
+    hero.style.setProperty('--parallax-y', '0');
+  });
+}
+
+function setupRevealAnimations() {
+  const elements = $$('[data-reveal]');
+  if (!elements.length) return;
+
+  if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+    elements.forEach((element) => element.classList.add('is-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    });
+  }, {
+    threshold: 0.12,
+    rootMargin: '0px 0px -6% 0px'
+  });
+
+  elements.forEach((element) => observer.observe(element));
+}
+
+/* ============================================================
+   MAIN DIYA + LIGHT-UP DIYAS
+   ============================================================ */
+function setupDiyas() {
+  const mainDiya = $('#main-diya');
+  const stage = $('#diya-stage');
+  const message = $('#diya-message');
+  const hint = $('#diya-hint');
+
+  if (mainDiya && stage && message) {
+    // Keep the line ready for the live announcement after the click
+    const diyaMessage = CONFIG.messages.diya;
+    message.textContent = '';
+
+    mainDiya.addEventListener('click', () => {
+      const isFirstLight = !stage.classList.contains('is-lit');
+      stage.classList.add('is-lit');
+
+      message.textContent = diyaMessage;
+      message.classList.add('is-visible');
+
+      if (hint) {
+        hint.textContent = isFirstLight ? 'The light grows brighter' : 'Keep the light going';
+      }
+
+      const rect = mainDiya.getBoundingClientRect();
+      const centreX = rect.left + rect.width / 2;
+      const centreY = rect.top + rect.height * 0.36;
+
+      createLightWave(centreX, centreY);
+      fireworksEffects.spawn(centreX, centreY, {
+        count: isFirstLight ? 82 : 38,
+        shape: isFirstLight ? 'burst' : 'ring'
+      });
+      music.chime(isFirstLight ? 659.25 : 880);
+    });
+  }
+
+  const miniDiyas = $$('[data-diya]');
+  const progress = $('#light-progress');
+  const completeMessage = $('#light-complete');
+
+  if (!miniDiyas.length) return;
+
+  state.totalDiyas = miniDiyas.length;
+
+  const updateProgress = () => {
+    const ratio = state.totalDiyas ? state.litDiyas / state.totalDiyas : 0;
+    document.documentElement.style.setProperty('--lit-ratio', ratio.toFixed(3));
+
+    if (progress) {
+      progress.innerHTML = `<strong>${state.litDiyas}</strong> of ${state.totalDiyas} diyas glowing`;
+    }
+  };
+
+  const celebrateEveryDiya = () => {
+    if (completeMessage) completeMessage.classList.add('is-visible');
+
+    showToast('Every diya is glowing. Happy Diwali, with love from SAM ✦', 5000);
+    music.chime(987.77);
+    window.setTimeout(() => music.chime(1174.66), 360);
+
+    if (!prefersReducedMotion) {
+      [0.25, 0.5, 0.75].forEach((x, index) => {
+        window.setTimeout(() => {
+          fireworksEffects.spawn(window.innerWidth * x, window.innerHeight * (0.34 + index * 0.04), {
+            count: 82,
+            shape: 'ring'
+          });
+        }, index * 300);
+      });
+    }
+  };
+
+  miniDiyas.forEach((button, index) => {
+    button.addEventListener('click', () => {
+      if (button.classList.contains('is-lit')) {
+        const rect = button.getBoundingClientRect();
+        fireworksEffects.spawn(rect.left + rect.width / 2, rect.top + rect.height * 0.35, {
+          count: 14,
+          shape: 'burst'
+        });
+        music.chime(1046.5);
+        return;
+      }
+
+      button.classList.add('is-lit');
+      button.setAttribute('aria-pressed', 'true');
+      button.setAttribute('aria-label', `Diya ${index + 1} is lit`);
+      state.litDiyas += 1;
+      updateProgress();
+
+      const rect = button.getBoundingClientRect();
+      fireworksEffects.spawn(rect.left + rect.width / 2, rect.top + rect.height * 0.28, {
+        count: 22,
+        shape: 'burst'
+      });
+      music.chime(pick([659.25, 739.99, 880, 987.77]));
+
+      if (state.litDiyas === state.totalDiyas) celebrateEveryDiya();
+    });
+  });
+
+  updateProgress();
+}
+
+/* ============================================================
+   MAKE A WISH
+   ============================================================ */
+function setupWish() {
+  const dialog = $('#wish-dialog');
+  const form = $('#wish-form');
+  const input = $('#wish-input');
+  const countLabel = $('#wish-count');
+  const errorLabel = $('#wish-error');
+  const closeButton = $('#wish-close');
+  const confirmation = $('#wish-confirmation');
+  const confirmationText = $('#wish-confirmation-text');
+  const floatingLayer = $('#floating-layer');
+  const openers = $$('[data-open-wish]');
+
+  if (!dialog || !form || !input) return;
+
+  const updateCount = () => {
+    if (countLabel) countLabel.textContent = String(input.value.length);
+    if (errorLabel) errorLabel.hidden = true;
+  };
+
+  const openDialog = () => {
+    if (typeof dialog.showModal === 'function') {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      dialog.setAttribute('open', '');
+    }
+    window.setTimeout(() => input.focus(), 70);
+  };
+
+  openers.forEach((button) => button.addEventListener('click', openDialog));
+
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog.removeAttribute('open');
+    });
+  }
+
+  dialog.addEventListener('click', (event) => {
+    if (event.target !== dialog) return;
+    const rect = dialog.getBoundingClientRect();
+    const outside =
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom;
+    if (outside && typeof dialog.close === 'function') dialog.close();
+  });
+
+  input.addEventListener('input', updateCount);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const wish = input.value.trim().replace(/\s+/g, ' ');
+
+    if (!wish) {
+      if (errorLabel) errorLabel.hidden = false;
+      input.focus();
+      return;
+    }
+
+    if (errorLabel) errorLabel.hidden = true;
+    storeWish(wish);
+
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+
+    input.value = '';
+    updateCount();
+    releaseWish(wish);
+  });
+
+  const releaseWish = (wish) => {
+    if (confirmation && confirmationText) {
+      confirmationText.textContent = `“${wish}”`;
+      confirmation.hidden = false;
+    }
+
+    if (floatingLayer) {
+      const floating = document.createElement('p');
+      floating.className = 'floating-wish';
+      floating.textContent = `“${wish}”`;
+      floating.style.setProperty('--drift', `${rand(-90, 90).toFixed(0)}px`);
+      floatingLayer.appendChild(floating);
+      window.setTimeout(() => floating.remove(), 9000);
+    }
+
+    fireworksEffects.spawn(window.innerWidth * 0.5, window.innerHeight * 0.34, {
+      count: 64,
+      shape: 'burst'
+    });
+    showToast('May your wish find its way to reality. ✦', 5000);
+    music.chime(880);
+    window.setTimeout(() => music.chime(1174.66), 320);
+  };
+
+  // Show the last wish made on this device, if there is one.
+  const savedWish = readStoredWish();
+  if (savedWish && confirmation && confirmationText) {
+    confirmationText.textContent = `“${savedWish}”`;
+    confirmation.hidden = false;
+  }
+
+  updateCount();
+}
+
+/* ============================================================
+   THE GOLDEN GIFT
+   ============================================================ */
+function setupGift() {
+  const button = $('#gift-button');
+  const reveal = $('#gift-reveal');
+  if (!button || !reveal) return;
+
+  reveal.setAttribute('aria-hidden', 'true');
+
+  button.addEventListener('click', () => {
+    const rect = button.getBoundingClientRect();
+    const centreX = rect.left + rect.width / 2;
+    const centreY = rect.top + rect.height * 0.45;
+
+    if (state.giftOpened) {
+      fireworksEffects.spawn(centreX, centreY, { count: 34, shape: 'burst' });
+      music.chime(880);
+      return;
+    }
+
+    state.giftOpened = true;
+    button.classList.add('is-shaking');
+    music.chime(523.25);
+
+    const openDelay = prefersReducedMotion ? 60 : 650;
+    window.setTimeout(() => {
+      button.classList.remove('is-shaking');
+      button.classList.add('is-open');
+      button.setAttribute('aria-expanded', 'true');
+      button.setAttribute('aria-label', 'Golden gift opened. Tap for more sparkles.');
+
+      reveal.classList.add('is-visible');
+      reveal.removeAttribute('aria-hidden');
+
+      createLightWave(centreX, centreY);
+      fireworksEffects.spawn(centreX, centreY, {
+        count: 100,
+        shape: 'burst'
+      });
+
+      showToast('A little light, just for you ✦', 4200);
+      music.chime(783.99);
+      window.setTimeout(() => music.chime(1046.5), 320);
+    }, openDelay);
+  });
+}
+
+/* ============================================================
+   FIREWORKS CONTROLS + CLICK-ANYWHERE SKY
+   ============================================================ */
+function setupFireworksControls() {
+  const launchButton = $('#launch-fireworks');
+  const autoButton = $('#auto-fireworks');
+
+  if (launchButton) {
+    launchButton.addEventListener('click', () => {
+      if (prefersReducedMotion) {
+        showToast('The sky is calm while reduced motion is enabled.');
+        return;
+      }
+
+      fireworksEffects.launchRocket();
+      music.chime(659.25);
+    });
+  }
+
+  if (autoButton) {
+    autoButton.addEventListener('click', () => {
+      const shouldStart = !fireworksEffects.isAuto();
+
+      if (shouldStart && prefersReducedMotion) {
+        showToast('Auto show is off while reduced motion is enabled.');
+        return;
+      }
+
+      const active = fireworksEffects.setAuto(shouldStart);
+      state.autoFireworks = active;
+      autoButton.setAttribute('aria-pressed', String(active));
+      autoButton.textContent = active ? 'Stop auto show' : 'Start auto show';
+      showToast(active ? 'The sky is taking over. Enjoy the show. ✦' : 'Auto show paused.');
+      music.chime(active ? 880 : 523.25);
+    });
+  }
+
+  // Tap/click any non-interactive part of the page to burst fireworks there.
+  document.addEventListener('click', (event) => {
+    if (!state.entered) return;
+    if (event.button && event.button > 0) return;
+
+    const target = event.target;
+    if (target instanceof Element) {
+      const interactive = target.closest(
+        'a, button, input, textarea, select, label, option, [role="button"], dialog'
+      );
+      if (interactive) return;
+    }
+
+    const now = performance.now();
+    if (now - state.lastBurst < 110) return;
+    state.lastBurst = now;
+
+    fireworksEffects.spawn(event.clientX, event.clientY, {
+      count: 52,
+      shape: 'burst'
+    });
+  });
+}
+
+/* ============================================================
+   FINALE
+   ============================================================ */
+function setupFinale() {
+  const finale = $('#finale');
+  const button = $('#finale-fireworks');
+
+  const launchFinale = () => {
+    fireworksEffects.finaleSequence();
+    showToast('HAPPY DIWALI ✦ With love, SAM @ CODISAM', 5000);
+    music.chime(987.77);
+    window.setTimeout(() => music.chime(1174.66), 350);
+  };
+
+  if (button) button.addEventListener('click', launchFinale);
+
+  if (!finale || !('IntersectionObserver' in window)) return;
+  if (!CONFIG.autoFireworksInFinale) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting || state.finaleShown) return;
+      state.finaleShown = true;
+      observer.unobserve(finale);
+
+      if (!prefersReducedMotion) {
+        window.setTimeout(() => fireworksEffects.finaleSequence(), 900);
+      }
+    });
+  }, { threshold: 0.35 });
+
+  observer.observe(finale);
+}
+
+/* ============================================================
+   MUSIC CONTROLS
+   ============================================================ */
+function setupMusic() {
+  const toggle = $('#music-toggle');
+  const label = $('#music-label');
+  const volume = $('#music-volume');
+
+  if (volume) {
+    volume.value = String(Math.round(clamp(CONFIG.music.volume, 0, 1) * 100));
+    volume.setAttribute('aria-valuetext', `${volume.value} percent`);
+    volume.addEventListener('input', () => {
+      music.setVolume(Number(volume.value) / 100);
+      volume.setAttribute('aria-valuetext', `${volume.value} percent`);
+    });
+  }
+
+  if (!toggle) return;
+
+  const updateUI = () => {
+    const isOn = music.enabled;
+    toggle.setAttribute('aria-pressed', String(isOn));
+    toggle.setAttribute(
+      'aria-label',
+      isOn ? 'Background music is on. Turn music off.' : 'Background music is off. Turn music on.'
+    );
+    if (label) label.textContent = isOn ? 'Music on' : 'Music off';
+  };
+
+  toggle.addEventListener('click', async () => {
+    if (music.enabled) {
+      music.stop();
+      updateUI();
+      showToast('Music paused. The visuals keep going.');
+      return;
+    }
+
+    const started = await music.start();
+    if (started) {
+      updateUI();
+      showToast('Music on · a generative Diwali ambience');
+      music.chime(880);
+    } else {
+      showToast('Music could not start in this browser.');
+    }
+  });
+
+  updateUI();
+}
+
+/* ============================================================
+   RANGOLI + VISIBILITY + RESIZE
+   ============================================================ */
+function setupRangoli() {
+  rangoliEffects.start();
+
+  const spinButton = $('#rangoli-spin');
+  const canvas = $('#rangoli-canvas');
+  if (!spinButton || !canvas) return;
+
+  spinButton.addEventListener('click', () => {
+    if (prefersReducedMotion) {
+      showToast('The rangoli is still while reduced motion is enabled.');
+      return;
+    }
+
+    rangoliEffects.spin();
+    const rect = canvas.getBoundingClientRect();
+    fireworksEffects.spawn(rect.left + rect.width / 2, rect.top + rect.height * 0.35, {
+      count: 26,
+      shape: 'ring'
+    });
+    music.chime(739.99);
+  });
+}
+
+function handleResize() {
+  introParticles.resize();
+  ambientEffects.resize();
+  fireworksEffects.resize();
+  rangoliEffects.resize();
+}
+
+function setupVisibility() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) music.suspend();
+    else music.resume();
+  });
+}
+
+/* ============================================================
+   INITIALISE EVERYTHING
+   ============================================================ */
+function init() {
+  applyConfig();
+  setupIntro();
+  setupHeaderScroll();
+  setupHeroParallax();
+  setupRevealAnimations();
+  setupDiyas();
+  setupWish();
+  setupGift();
+  setupFireworksControls();
+  setupFinale();
+  setupMusic();
+  setupRangoli();
+  setupVisibility();
+
+  window.addEventListener('resize', debounce(handleResize, 180));
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(handleResize, 320);
+  });
+  window.addEventListener('load', handleResize, { once: true });
+}
+
+init();
+</script>
+</body>
+</html>
